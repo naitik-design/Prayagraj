@@ -1,0 +1,8 @@
+{
+  "name": "Vesper - 3D Cinematic Sky Sanctuary",
+  "description": "An immersive, Awwwards-quality 3D interactive storytelling experience exploring a futuristic luxury skyscraper with cinematic transitions, dynamic lighting, and scroll-bound WebGL graphics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
