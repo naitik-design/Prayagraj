@@ -9,6 +9,30 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Simple token-based auth for dashboard
+  const MOCK_TOKEN = "hotel-prayagraj-admin-token-7x9z";
+
+  app.post("/api/login", (req, res) => {
+    const { username, password } = req.body;
+    const adminUser = process.env.ADMIN_USERNAME || "admin";
+    const adminPass = process.env.ADMIN_PASSWORD || "admin123";
+    
+    if (username === adminUser && password === adminPass) {
+      res.json({ success: true, token: MOCK_TOKEN });
+    } else {
+      res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+  });
+
+  app.post("/api/verify", (req, res) => {
+    const { token } = req.body;
+    if (token === MOCK_TOKEN) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ success: false });
+    }
+  });
+
   // AI chat route
   app.post("/api/chat", async (req, res) => {
     try {
@@ -65,7 +89,7 @@ Guidelines for behavior:
 - Never invent policies or fake information. If you cannot answer a specific question, advise them to call our friendly front desk at +91 75971 17839.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-3.1-flash-lite',
         contents: contents,
         config: {
           systemInstruction: systemInstruction,
