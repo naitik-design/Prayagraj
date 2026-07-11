@@ -2,6 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Hotel App state sync document
+    match /hotel_app/{document} {
+      allow read, write: if true;
+    }
+
     // Anyone can read public content like rooms, content, gallery, attractions, settings
     match /rooms/{document} {
       allow read: if true;
