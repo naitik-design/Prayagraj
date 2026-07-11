@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase.js';
 
 const DB_FILE = path.join(process.cwd(), 'database.json');
 
@@ -29,6 +31,32 @@ const defaultData = {
 
 let data: any = null;
 
+export async function initDb() {
+  try {
+    const docRef = doc(db, 'hotel_app', 'database');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      data = docSnap.data();
+      console.log('Database loaded successfully from Firestore.');
+      try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+      } catch (e) {
+        // Safe to ignore in read-only filesystems
+      }
+    } else {
+      console.log('No database found in Firestore. Seeding default data...');
+      data = { ...defaultData };
+      await setDoc(docRef, data);
+      try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+      } catch (e) {}
+    }
+  } catch (error) {
+    console.warn('Failed to load database from Firestore, falling back to local file:', error);
+    loadDb();
+  }
+}
+
 export function loadDb() {
   if (data) return data;
   try {
@@ -48,7 +76,19 @@ export function loadDb() {
 
 export function saveDb() {
   if (data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    } catch (e) {
+      // Safe to ignore in read-only filesystems
+    }
+    
+    // Asynchronously save to Firestore to avoid blocking Express responses
+    const docRef = doc(db, 'hotel_app', 'database');
+    setDoc(docRef, data).then(() => {
+      console.log('Database updated in Firestore.');
+    }).catch(err => {
+      console.error('Failed to update database in Firestore:', err);
+    });
   }
 }
 
