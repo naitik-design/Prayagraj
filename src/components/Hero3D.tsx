@@ -1,7 +1,106 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Float, ContactShadows, Sparkles, Environment, Stars, Cloud } from '@react-three/drei';
+import { Float, ContactShadows, Environment, Stars, Cloud } from '@react-three/drei';
 import * as THREE from 'three';
+
+function CinematicDustParticles() {
+  const pointsRef = useRef<THREE.Points>(null);
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  const count = 1200; // Premium abundance of particles
+
+  // Dynamic procedural gold bokeh glow texture
+  const particleTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.15, 'rgba(212, 175, 55, 0.95)'); // Luxury gold center core
+      gradient.addColorStop(0.35, 'rgba(212, 175, 55, 0.4)');   // Soft gold glow
+      gradient.addColorStop(0.65, 'rgba(212, 175, 55, 0.08)');  // Outer golden haze
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  }, []);
+
+  const [positions, phases, speeds] = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const phase = new Float32Array(count);
+    const speed = new Float32Array(count);
+
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 50;     // X
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 35; // Y
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 40; // Z
+
+      phase[i] = Math.random() * Math.PI * 2;
+      speed[i] = 0.03 + Math.random() * 0.12;
+    }
+    return [pos, phase, speed];
+  }, []);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    const geo = geomRef.current;
+    if (!geo) return;
+
+    const posArr = geo.attributes.position.array as Float32Array;
+
+    for (let i = 0; i < count; i++) {
+      const idx = i * 3;
+
+      // Slow elegant upward air drift
+      posArr[idx + 1] += speeds[i] * 0.035;
+
+      // Gentle swaying / thermal air currents
+      const driftPhase = phases[i] + time * (speeds[i] * 0.3);
+      posArr[idx] += Math.sin(driftPhase) * 0.007;
+      posArr[idx + 2] += Math.cos(driftPhase) * 0.007;
+
+      // Wrap around Y boundary smoothly when rising past top threshold
+      if (posArr[idx + 1] > 20) {
+        posArr[idx + 1] = -15;
+        posArr[idx] = (Math.random() - 0.5) * 50;
+        posArr[idx + 2] = (Math.random() - 0.5) * 40;
+      }
+    }
+
+    geo.attributes.position.needsUpdate = true;
+    
+    // Smooth celestial rotation of the overall field
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y = time * 0.008;
+      pointsRef.current.rotation.x = Math.sin(time * 0.015) * 0.015;
+    }
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.18}
+        map={particleTexture}
+        transparent={true}
+        opacity={0.8}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        color="#F8F3D4" // Heavenly soft ivory-gold hue
+      />
+    </points>
+  );
+}
 
 function HotelBuilding({ entranceProgress }: { entranceProgress: number }) {
   // Use entranceProgress to fade in emissive lights
@@ -133,10 +232,8 @@ function SceneControls() {
         <HotelBuilding entranceProgress={entranceProgress} />
       </Float>
       
-      {/* Floating particles - Gold Dust */}
-      <Sparkles count={500} scale={20} size={2} speed={0.2} opacity={0.4} color="#D4AF37" />
-      {/* Soft floating dust */}
-      <Sparkles count={300} scale={25} size={1} speed={0.1} opacity={0.1} color="#FAFAFA" />
+      {/* Floating particles - Gold Dust & Cinematic Sanctuary floating dust */}
+      <CinematicDustParticles />
       
       {/* Floor reflection shadow */}
       <ContactShadows position={[0, -1.1, 0]} opacity={0.9} scale={30} blur={3} far={5} color="#000000" />

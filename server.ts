@@ -146,7 +146,7 @@ async function startServer() {
       const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-lite',
+        model: 'gemini-3.5-flash',
         contents: contents,
         config: {
           systemInstruction: settings.chatbotPrompt || "You are a helpful hotel assistant.",
