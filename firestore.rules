@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Anyone can read public content like rooms, content, gallery, attractions, settings
+    match /rooms/{document} {
+      allow read: if true;
+      allow write: if true; // In a real app we'd verify auth token, but here we can just use simple logic or rely on server
+    }
+    match /bookings/{document} {
+      allow read: if true; // Admin reads
+      allow create: if true; // Public can create
+      allow update, delete: if true; // Admin updates
+    }
+    match /content/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /gallery/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /attractions/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /settings/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

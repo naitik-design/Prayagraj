@@ -1,12 +1,19 @@
 import { motion } from 'motion/react';
-import { Users, CalendarDays, TrendingUp, BedDouble, ArrowUpRight, Image as ImageIcon, MessageSquareText } from 'lucide-react';
+import { Users, CalendarDays, TrendingUp, BedDouble, ArrowUpRight } from 'lucide-react';
+import { useApi } from './useApi';
 
 export default function Dashboard() {
+  const { data, loading } = useApi('analytics');
+
+  if (loading || !data) {
+    return <div className="text-white/50 flex justify-center items-center h-[50vh]">Loading analytics...</div>;
+  }
+
   const stats = [
-    { name: 'Total Bookings', value: '1,248', trend: '+12.5%', icon: CalendarDays },
-    { name: 'Active Guests', value: '42', trend: '+5.2%', icon: Users },
-    { name: 'Available Rooms', value: '18', trend: '-2.1%', icon: BedDouble },
-    { name: 'Revenue (MTD)', value: '₹4.2L', trend: '+18.4%', icon: TrendingUp },
+    { name: 'Total Bookings', value: data.completedBookings + data.pendingBookings, icon: CalendarDays },
+    { name: 'Available Rooms', value: data.availableRooms, icon: BedDouble },
+    { name: 'Occupied Rooms', value: data.occupiedRooms, icon: Users },
+    { name: 'Total Revenue', value: `₹${data.revenue.toLocaleString()}`, icon: TrendingUp },
   ];
 
   return (
@@ -18,7 +25,7 @@ export default function Dashboard() {
     >
       <div>
         <h1 className="text-3xl font-serif tracking-wide">Overview</h1>
-        <p className="text-white/50 text-sm mt-1">Welcome back, Admin. Here's what's happening today.</p>
+        <p className="text-white/50 text-sm mt-1">Live hotel metrics.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -36,9 +43,6 @@ export default function Dashboard() {
               <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-[#D4AF37]">
                 <stat.icon className="w-6 h-6" />
               </div>
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                {stat.trend}
-              </span>
             </div>
             
             <div className="relative z-10">
@@ -49,64 +53,62 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Bookings Placeholder */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Bookings */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="lg:col-span-2 bg-[#0E0E10] border border-white/5 rounded-2xl p-6"
+          className="bg-[#0E0E10] border border-white/5 rounded-2xl p-6"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-serif tracking-wide">Recent Requests</h2>
-            <button className="text-[#D4AF37] text-sm hover:text-[#E8C76A] flex items-center gap-1 transition-colors">
-              View All <ArrowUpRight className="w-4 h-4" />
-            </button>
+            <h2 className="text-xl font-serif tracking-wide">Recent Bookings</h2>
           </div>
           
           <div className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-transparent hover:border-white/10">
+            {data.recentGuests.length === 0 ? (
+              <p className="text-white/40 text-sm">No recent bookings.</p>
+            ) : data.recentGuests.map((booking: any, i: number) => (
+              <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#b8932c] flex items-center justify-center text-black font-serif font-bold">
-                    {String.fromCharCode(65 + i)}
+                  <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold">
+                    {booking.guestName?.[0] || 'G'}
                   </div>
                   <div>
-                    <h4 className="font-medium text-sm">Guest Name {i+1}</h4>
-                    <p className="text-white/50 text-xs">Deluxe Room • 3 Nights</p>
+                    <h4 className="font-medium text-sm">{booking.guestName}</h4>
+                    <p className="text-white/50 text-xs">{booking.roomName}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="inline-block px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20">
-                    Pending
+                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase ${booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
+                    {booking.status}
                   </span>
-                  <p className="text-white/40 text-[10px] mt-1">2 hours ago</p>
                 </div>
               </div>
             ))}
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Recent Chat */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
           className="bg-[#0E0E10] border border-white/5 rounded-2xl p-6"
         >
-          <h2 className="text-xl font-serif tracking-wide mb-6">Quick Actions</h2>
-          <div className="space-y-3">
-            {[
-              { name: 'Update Pricing', icon: TrendingUp },
-              { name: 'Block Room', icon: BedDouble },
-              { name: 'Edit Hero Image', icon: ImageIcon },
-              { name: 'Bot Settings', icon: MessageSquareText },
-            ].map((action, i) => (
-              <button key={i} className="w-full flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37] transition-all border border-transparent hover:border-[#D4AF37]/30 text-sm text-left group">
-                <action.icon className="w-5 h-5 text-white/40 group-hover:text-[#D4AF37] transition-colors" />
-                <span>{action.name}</span>
-              </button>
-            ))}
+          <h2 className="text-xl font-serif tracking-wide mb-6">Recent AI Chats</h2>
+          <div className="space-y-4">
+            {data.recentConversations.length === 0 ? (
+              <p className="text-white/40 text-sm">No recent conversations.</p>
+            ) : data.recentConversations.map((conv: any, i: number) => {
+               const lastMsg = conv.messages[conv.messages.length - 1];
+               return (
+                <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-white/70 truncate">
+                  <span className="text-[#D4AF37]">User:</span> {conv.messages.find((m:any) => m.sender === 'user')?.text || '...'} <br/>
+                  <span className="text-white/40">Bot:</span> {lastMsg?.text}
+                </div>
+               );
+            })}
           </div>
         </motion.div>
       </div>

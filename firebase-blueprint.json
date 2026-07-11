@@ -1,0 +1,78 @@
+{
+  "collections": [
+    {
+      "name": "rooms",
+      "fields": [
+        { "name": "name", "type": "string" },
+        { "name": "price", "type": "number" },
+        { "name": "discount", "type": "number" },
+        { "name": "type", "type": "string" },
+        { "name": "available", "type": "boolean" },
+        { "name": "featured", "type": "boolean" },
+        { "name": "capacity", "type": "number" },
+        { "name": "amenities", "type": "array" },
+        { "name": "images", "type": "array" },
+        { "name": "createdAt", "type": "timestamp" },
+        { "name": "updatedAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "bookings",
+      "fields": [
+        { "name": "guestName", "type": "string" },
+        { "name": "guestEmail", "type": "string" },
+        { "name": "guestPhone", "type": "string" },
+        { "name": "roomId", "type": "string" },
+        { "name": "roomName", "type": "string" },
+        { "name": "checkIn", "type": "timestamp" },
+        { "name": "checkOut", "type": "timestamp" },
+        { "name": "guests", "type": "number" },
+        { "name": "totalPrice", "type": "number" },
+        { "name": "status", "type": "string" },
+        { "name": "createdAt", "type": "timestamp" },
+        { "name": "updatedAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "content",
+      "fields": [
+        { "name": "section", "type": "string" },
+        { "name": "data", "type": "map" },
+        { "name": "updatedAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "gallery",
+      "fields": [
+        { "name": "url", "type": "string" },
+        { "name": "title", "type": "string" },
+        { "name": "createdAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "attractions",
+      "fields": [
+        { "name": "name", "type": "string" },
+        { "name": "location", "type": "string" },
+        { "name": "distance", "type": "string" },
+        { "name": "image", "type": "string" },
+        { "name": "description", "type": "string" },
+        { "name": "createdAt", "type": "timestamp" },
+        { "name": "updatedAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "settings",
+      "fields": [
+        { "name": "hotelName", "type": "string" },
+        { "name": "phone", "type": "string" },
+        { "name": "email", "type": "string" },
+        { "name": "whatsapp", "type": "string" },
+        { "name": "address", "type": "string" },
+        { "name": "chatbotEnabled", "type": "boolean" },
+        { "name": "chatbotPrompt", "type": "string" },
+        { "name": "updatedAt", "type": "timestamp" }
+      ]
+    }
+  ]
+}

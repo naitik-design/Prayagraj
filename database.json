@@ -1,0 +1,82 @@
+{
+  "rooms": [
+    {
+      "id": "1",
+      "name": "Deluxe Room",
+      "price": 2500,
+      "discount": 0,
+      "type": "Couples",
+      "available": true,
+      "featured": true,
+      "capacity": 2,
+      "amenities": [
+        "Wifi",
+        "AC"
+      ],
+      "images": [
+        "/images/deluxe_room_1783739111901.jpg"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Family Suite",
+      "price": 4500,
+      "discount": 0,
+      "type": "Family",
+      "available": true,
+      "featured": false,
+      "capacity": 4,
+      "amenities": [
+        "Wifi",
+        "AC",
+        "Kitchen"
+      ],
+      "images": [
+        "/images/family_suite_1783739124830.jpg"
+      ]
+    }
+  ],
+  "bookings": [],
+  "content": {
+    "hero": {
+      "title": "Hotel Prayagraj",
+      "subtitle": "A premium sanctuary blending modern comfort with traditional Rajasthani warmth."
+    },
+    "about": {
+      "text": "Located near the holy Khatu Shyam Ji Temple."
+    }
+  },
+  "gallery": [],
+  "attractions": [],
+  "settings": {
+    "hotelName": "Hotel Prayagraj",
+    "phone": "+91 75971 17839",
+    "email": "info@prayagrajhotel.com",
+    "whatsapp": "+91 75971 17839",
+    "address": "2–3 Shree Shyam Vihar Colony, Reengus, Rajasthan 332404",
+    "chatbotEnabled": true,
+    "chatbotPrompt": "You are Prayagraj Concierge..."
+  },
+  "conversations": [
+    {
+      "id": "1783739162364",
+      "timestamp": "2026-07-11T03:06:02.364Z",
+      "messages": [
+        {
+          "id": "1",
+          "text": "Namaste! Welcome to Hotel Prayagraj. How can I assist you today?",
+          "sender": "bot"
+        },
+        {
+          "id": "1783739159499",
+          "text": "Hii",
+          "sender": "user"
+        },
+        {
+          "sender": "bot",
+          "text": "Namaste! A very warm welcome to you. How are you doing today? \n\nWhether you need assistance with your room, recommendations for local sightseeing in the holy city of Prayagraj, travel arrangements, or dining suggestions, I am here to ensure you have a comfortable and memorable stay.\n\nHow may I assist you this morning?"
+        }
+      ]
+    }
+  ]
+}

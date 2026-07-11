@@ -4,6 +4,12 @@ import DashboardLayout from './dashboard/DashboardLayout';
 import Login from './dashboard/Login';
 import Dashboard from './dashboard/Dashboard';
 import RoomsManagement from './dashboard/RoomsManagement';
+import BookingsManagement from "./dashboard/BookingsManagement";
+import ContentManagement from "./dashboard/ContentManagement";
+import Settings from "./dashboard/Settings";
+import GalleryManagement from "./dashboard/GalleryManagement";
+import AttractionsManagement from "./dashboard/AttractionsManagement";
+import ChatbotManagement from "./dashboard/ChatbotManagement";
 import Placeholder from './dashboard/Placeholder';
 import { AuthProvider, useAuth } from './dashboard/AuthContext';
 
@@ -35,13 +41,13 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="rooms" element={<RoomsManagement />} />
-            <Route path="bookings" element={<Placeholder title="Bookings" />} />
-            <Route path="gallery" element={<Placeholder title="Gallery" />} />
+            <Route path="bookings" element={<BookingsManagement />} />
+            <Route path="gallery" element={<GalleryManagement />} />
             <Route path="amenities" element={<Placeholder title="Amenities" />} />
-            <Route path="content" element={<Placeholder title="Website Content" />} />
-            <Route path="attractions" element={<Placeholder title="Attractions" />} />
-            <Route path="chatbot" element={<Placeholder title="AI Chatbot" />} />
-            <Route path="settings" element={<Placeholder title="Settings" />} />
+            <Route path="content" element={<ContentManagement />} />
+            <Route path="attractions" element={<AttractionsManagement />} />
+            <Route path="chatbot" element={<ChatbotManagement />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           
           {/* Fallback to home */}
