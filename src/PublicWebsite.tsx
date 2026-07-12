@@ -16,7 +16,11 @@ import {
   X,
   Sparkles,
   Map,
-  MessageSquare
+  MessageSquare,
+  ArrowLeft,
+  CreditCard,
+  Check,
+  AlertCircle
 } from "lucide-react";
 
 import gsap from "gsap";
@@ -280,22 +284,139 @@ function MagneticButton({ children, className = "" }: { children: React.ReactNod
 function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?: string }) {
   const [formData, setFormData] = useState({ guestName: '', guestPhone: '', guestEmail: '', roomId: '', checkIn: '', checkOut: '', guests: 1 });
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [checkoutData, setCheckoutData] = useState<any>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const calculateTotals = () => {
+    const room = rooms?.find(r => r.id === formData.roomId);
+    if (!room) return { subtotal: 0, taxes: 0, total: 0, days: 0 };
+    
+    const start = new Date(formData.checkIn);
+    const end = new Date(formData.checkOut);
+    let days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+    if (isNaN(days) || days <= 0) days = 1;
+    
+    const subtotal = room.price * days;
+    const taxes = subtotal * 0.18; // 18% GST
+    return { subtotal, taxes, total: subtotal + taxes, days, room };
+  };
+
+  const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.roomId || !formData.checkIn || !formData.checkOut || !formData.guestName || !formData.guestPhone) {
+      setErrorMsg("Please fill out all required fields.");
+      return;
+    }
+    setErrorMsg('');
+    setCheckoutData(calculateTotals());
+  };
+
+  const handlePayAtHotel = async () => {
     setSubmitting(true);
+    setErrorMsg('');
     try {
-      const room = rooms?.find(r => r.id === formData.roomId);
-      const booking = { ...formData, roomName: room ? room.name : 'Unknown Room', totalPrice: room ? room.price : 0, status: 'pending' };
-      await fetch('/api/bookings', {
+      const res = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(booking)
+        body: JSON.stringify({ bookingDetails: formData, paymentMethod: 'pay_at_hotel' })
       });
-      setSuccess(true);
-    } catch(err) {
+      const data = await res.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create booking");
+      }
+
+      setPaymentSuccess(data.booking);
+    } catch(err: any) {
       console.error(err);
+      setErrorMsg(err.message || "An error occurred during booking.");
+    }
+    setSubmitting(false);
+  };
+
+  const handlePayment = async () => {
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingDetails: formData })
+      });
+      const data = await res.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create order");
+      }
+
+      if (data.isMock) {
+        // Mock payment flow
+        const verifyRes = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            razorpay_order_id: data.orderId,
+            razorpay_payment_id: "mock_payment_" + Date.now(),
+            razorpay_signature: "mock_sig",
+            bookingId: data.bookingId,
+            isMock: true
+          })
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setPaymentSuccess(verifyData.booking);
+        } else {
+          throw new Error("Payment verification failed");
+        }
+      } else {
+        // Real Razorpay integration
+        const options = {
+          key: data.key,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Hotel Prayagraj",
+          description: "Room Booking Payment",
+          order_id: data.orderId,
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...response,
+                  bookingId: data.bookingId,
+                  isMock: false
+                })
+              });
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                setPaymentSuccess(verifyData.booking);
+              } else {
+                setErrorMsg("Payment verification failed. If money was deducted, please contact support.");
+              }
+            } catch (err) {
+              setErrorMsg("Error verifying payment.");
+            }
+          },
+          prefill: {
+            name: formData.guestName,
+            email: formData.guestEmail,
+            contact: formData.guestPhone,
+          },
+          theme: {
+            color: "#D4AF37",
+          },
+        };
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+          setErrorMsg(response.error.description || "Payment failed");
+        });
+        rzp.open();
+      }
+    } catch(err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "An error occurred during payment.");
     }
     setSubmitting(false);
   };
@@ -303,7 +424,6 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
   const getWhatsAppLink = () => {
     const room = rooms?.find(r => r.id === formData.roomId);
     const roomName = room ? room.name : '';
-    
     let text = `Hello Hotel Prayagraj! I would like to make a booking inquiry.`;
     if (formData.guestName) text += `\nName: ${formData.guestName}`;
     if (formData.guestPhone) text += `\nPhone: ${formData.guestPhone}`;
@@ -317,12 +437,103 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
   };
 
-  if (success) {
-    return <div className="p-8 bg-green-500/10 text-green-500 border border-green-500/20 rounded-2xl text-center">Thank you! Your booking request has been received. We will contact you shortly.</div>;
+  if (paymentSuccess) {
+    return (
+      <div className="p-10 bg-black/60 border border-primary/30 rounded-2xl text-center backdrop-blur-md">
+        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Check className="w-8 h-8 text-primary" />
+        </div>
+        <h3 className="text-2xl font-light text-white mb-2">Booking Confirmed!</h3>
+        <p className="text-white/60 mb-6">Your payment was successful and your room is reserved.</p>
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 text-left mb-6 max-w-sm mx-auto">
+          <p className="text-sm text-white/50 mb-1">Booking ID</p>
+          <p className="font-mono text-primary mb-4">{paymentSuccess.id}</p>
+          <p className="text-sm text-white/50 mb-1">Room</p>
+          <p className="text-white mb-4">{paymentSuccess.roomName}</p>
+          <p className="text-sm text-white/50 mb-1">Dates</p>
+          <p className="text-white">{paymentSuccess.checkIn} to {paymentSuccess.checkOut}</p>
+        </div>
+        <p className="text-sm text-white/40">We've sent a confirmation to your email and WhatsApp.</p>
+      </div>
+    );
+  }
+
+  if (checkoutData) {
+    return (
+      <div className="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-2xl">
+        <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+          <button onClick={() => setCheckoutData(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/50 hover:text-white">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h3 className="text-2xl font-light text-white">Checkout</h3>
+        </div>
+
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-300">{errorMsg}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            <h4 className="text-sm font-medium tracking-widest text-primary uppercase">Guest Details</h4>
+            <div className="space-y-2 text-white/80">
+              <p><span className="text-white/40 inline-block w-24">Name:</span> {formData.guestName}</p>
+              <p><span className="text-white/40 inline-block w-24">Phone:</span> {formData.guestPhone}</p>
+              <p><span className="text-white/40 inline-block w-24">Email:</span> {formData.guestEmail || 'N/A'}</p>
+              <p><span className="text-white/40 inline-block w-24">Guests:</span> {formData.guests}</p>
+            </div>
+            
+            <h4 className="text-sm font-medium tracking-widest text-primary uppercase pt-4 border-t border-white/5">Stay Details</h4>
+            <div className="space-y-2 text-white/80">
+              <p><span className="text-white/40 inline-block w-24">Room:</span> {checkoutData.room.name}</p>
+              <p><span className="text-white/40 inline-block w-24">Check-in:</span> {formData.checkIn}</p>
+              <p><span className="text-white/40 inline-block w-24">Check-out:</span> {formData.checkOut}</p>
+              <p><span className="text-white/40 inline-block w-24">Duration:</span> {checkoutData.days} Night(s)</p>
+            </div>
+          </div>
+
+          <div className="bg-white/5 p-6 rounded-xl border border-white/10 h-fit">
+            <h4 className="text-sm font-medium tracking-widest text-white uppercase mb-6">Payment Summary</h4>
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between text-white/60">
+                <span>Room Charges ({checkoutData.days}x ₹{checkoutData.room.price})</span>
+                <span>₹{checkoutData.subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-white/60 pb-4 border-b border-white/10">
+                <span>Taxes (18% GST)</span>
+                <span>₹{checkoutData.taxes.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-white text-lg font-medium pt-2">
+                <span>Grand Total</span>
+                <span className="text-primary">₹{checkoutData.total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={handlePayAtHotel} 
+              disabled={submitting} 
+              className="w-full mt-8 py-4 bg-primary text-black rounded-lg font-medium tracking-[0.1em] hover:bg-primary-light transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Check className="w-5 h-5" />
+              {submitting ? 'Processing...' : 'Pay at Hotel'}
+            </button>
+            <p className="text-xs text-white/30 text-center mt-4 text-yellow-500/80">Online payment will be enabled soon.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
+    <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleCheckout}>
+      {errorMsg && (
+        <div className="md:col-span-2 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-300">{errorMsg}</p>
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-white/80 mb-2">Full Name</label>
         <input required value={formData.guestName} onChange={e => setFormData({...formData, guestName: e.target.value})} type="text" className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-white/30" placeholder="Enter your full name" />
@@ -358,7 +569,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
       </div>
       <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         <button type="submit" disabled={submitting} className="w-full py-4 bg-primary text-black rounded-lg font-medium tracking-[0.2em] uppercase hover:bg-primary-light transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] disabled:opacity-50">
-          {submitting ? 'Sending...' : 'Send Web Request'}
+          Proceed to Checkout
         </button>
         <a 
           href={getWhatsAppLink()}

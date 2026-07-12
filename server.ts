@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { getDb, saveDb, initDb } from "./src/db.js";
+import Razorpay from "razorpay";
+import crypto from "crypto";
 
 const app = express();
 const PORT = 3000;
@@ -79,15 +81,17 @@ collections.forEach(col => {
     res.json(db[col] || []);
   });
   
-  // POST create
-  app.post(`/api/${col}`, requireAuth, (req, res) => {
-    const db = getDb();
-    const newItem = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...req.body };
-    if (!db[col]) db[col] = [];
-    db[col].push(newItem);
-    saveDb();
-    res.json(newItem);
-  });
+  // POST create (exclude bookings from requireAuth)
+  if (col !== 'bookings') {
+    app.post(`/api/${col}`, requireAuth, (req, res) => {
+      const db = getDb();
+      const newItem = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...req.body };
+      if (!db[col]) db[col] = [];
+      db[col].push(newItem);
+      saveDb();
+      res.json(newItem);
+    });
+  }
   
   // PUT update
   app.put(`/api/${col}/:id`, requireAuth, (req, res) => {
@@ -196,6 +200,156 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// Razorpay logic
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mock_secret',
+});
+
+app.post("/api/create-order", async (req, res) => {
+  try {
+    const { bookingDetails, paymentMethod } = req.body;
+    
+    // Calculate total based on room in DB to ensure security
+    const db = getDb();
+    const room = db.rooms.find((r: any) => r.id === bookingDetails.roomId);
+    
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Calculate days
+    const start = new Date(bookingDetails.checkIn);
+    const end = new Date(bookingDetails.checkOut);
+    let days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+    if (isNaN(days) || days <= 0) days = 1;
+    
+    const subtotal = room.price * days;
+    const taxes = subtotal * 0.18; // 18% GST
+    const total = subtotal + taxes;
+    
+    // Save as draft booking
+    const bookingId = "BKG-" + Date.now();
+    const newBooking = {
+      ...bookingDetails,
+      id: bookingId,
+      roomName: room.name,
+      subtotal,
+      taxes,
+      totalPrice: total,
+      status: paymentMethod === 'pay_at_hotel' ? 'completed' : 'pending_payment',
+      paymentMethod: paymentMethod === 'pay_at_hotel' ? 'Pay at Hotel' : undefined,
+      createdAt: new Date().toISOString()
+    };
+    
+    if (!db.bookings) db.bookings = [];
+    db.bookings.push(newBooking);
+
+    if (paymentMethod === 'pay_at_hotel') {
+      db.rooms = db.rooms.map((r: any) => 
+        r.id === room.id ? { ...r, available: false } : r
+      );
+      saveDb();
+
+      // Mock sending confirmation Email and WhatsApp
+      console.log(`[Email] Sending booking confirmation to ${newBooking.guestEmail}`);
+      console.log(`[WhatsApp] Sending booking confirmation to ${newBooking.guestPhone}`);
+
+      return res.json({
+        success: true,
+        isPayAtHotel: true,
+        booking: newBooking
+      });
+    }
+
+    saveDb();
+
+    // Mock Razorpay order creation in test mode without valid keys
+    if (process.env.RAZORPAY_KEY_ID) {
+      const options = {
+        amount: Math.round(total * 100), // amount in smallest currency unit
+        currency: "INR",
+        receipt: bookingId,
+      };
+      
+      const order = await razorpay.orders.create(options);
+      res.json({
+        success: true,
+        orderId: order.id,
+        bookingId: bookingId,
+        amount: options.amount,
+        currency: options.currency,
+        key: process.env.RAZORPAY_KEY_ID,
+        booking: newBooking
+      });
+    } else {
+      // Mock order if no API keys
+      res.json({
+        success: true,
+        orderId: "order_mock_" + Date.now(),
+        bookingId: bookingId,
+        amount: Math.round(total * 100),
+        currency: "INR",
+        key: "rzp_test_mock_key",
+        booking: newBooking,
+        isMock: true // Instruct frontend to bypass actual razorpay popup if true
+      });
+    }
+  } catch (error: any) {
+    console.error("Create order error:", error);
+    res.status(500).json({ error: "Failed to create payment order" });
+  }
+});
+
+app.post("/api/verify-payment", async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId, isMock } = req.body;
+    
+    const db = getDb();
+    const bookingIndex = db.bookings.findIndex((b: any) => b.id === bookingId);
+    
+    if (bookingIndex === -1) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    if (!isMock) {
+      const secret = process.env.RAZORPAY_KEY_SECRET || '';
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(body.toString())
+        .digest("hex");
+        
+      if (expectedSignature !== razorpay_signature) {
+         db.bookings[bookingIndex].status = 'failed';
+         saveDb();
+         return res.status(400).json({ error: "Invalid signature" });
+      }
+    }
+
+    // Mark as paid
+    db.bookings[bookingIndex].status = 'completed';
+    db.bookings[bookingIndex].paymentId = razorpay_payment_id || 'mock_payment_id';
+    db.bookings[bookingIndex].paymentMethod = 'UPI'; // Assuming UPI for this task
+    saveDb();
+    
+    // Update room availability
+    db.rooms = db.rooms.map((r: any) => 
+       r.id === db.bookings[bookingIndex].roomId ? { ...r, available: false } : r
+    );
+    saveDb();
+
+    // Mock sending confirmation Email and WhatsApp
+    console.log(`[Email] Sending booking confirmation to ${db.bookings[bookingIndex].guestEmail}`);
+    console.log(`[WhatsApp] Sending booking confirmation to ${db.bookings[bookingIndex].guestPhone}`);
+
+    res.json({ success: true, booking: db.bookings[bookingIndex] });
+  } catch (error: any) {
+    console.error("Verify payment error:", error);
+    res.status(500).json({ error: "Payment verification failed" });
+  }
+});
+
 // Dashboard Overview Analytics
 app.get("/api/analytics", requireAuth, (req, res) => {
   const db = getDb();
@@ -206,7 +360,7 @@ app.get("/api/analytics", requireAuth, (req, res) => {
   const availableRooms = rooms.filter((r:any) => r.available).length;
   const occupiedRooms = totalRooms - availableRooms;
   
-  const pendingBookings = bookings.filter((b:any) => b.status === 'pending').length;
+  const pendingBookings = bookings.filter((b:any) => b.status === 'pending_payment' || b.status === 'pending').length;
   const completedBookings = bookings.filter((b:any) => b.status === 'completed').length;
   
   // Revenue calculation

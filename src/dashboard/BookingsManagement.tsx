@@ -43,9 +43,9 @@ export default function BookingsManagement() {
         </div>
         <select value={filter} onChange={e => setFilter(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-[#D4AF37] focus:outline-none appearance-none">
           <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="completed">Completed</option>
+          <option value="pending_payment">Pending Payment</option>
+          <option value="completed">Paid / Completed</option>
+          <option value="failed">Failed</option>
         </select>
       </div>
 
@@ -56,6 +56,7 @@ export default function BookingsManagement() {
               <th className="px-6 py-4 font-medium">Guest</th>
               <th className="px-6 py-4 font-medium">Room</th>
               <th className="px-6 py-4 font-medium">Dates</th>
+              <th className="px-6 py-4 font-medium">Payment Info</th>
               <th className="px-6 py-4 font-medium">Status</th>
               <th className="px-6 py-4 font-medium text-right">Actions</th>
             </tr>
@@ -72,9 +73,20 @@ export default function BookingsManagement() {
                   <div>{new Date(b.checkIn).toLocaleDateString()} - </div>
                   <div className="text-white/50">{new Date(b.checkOut).toLocaleDateString()}</div>
                 </td>
+                <td className="px-6 py-4 text-sm text-white/70">
+                  {b.paymentId ? (
+                    <>
+                      <div className="font-mono text-xs">{b.paymentId}</div>
+                      <div className="text-xs text-[#D4AF37]">{b.paymentMethod || 'Razorpay UPI'}</div>
+                      <div className="text-xs font-medium">₹{(b.totalPrice || 0).toLocaleString()}</div>
+                    </>
+                  ) : (
+                    <span className="text-white/30 text-xs">Unpaid</span>
+                  )}
+                </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider ${b.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : b.status === 'completed' ? 'bg-gray-500/10 text-gray-400' : 'bg-green-500/10 text-green-500'}`}>
-                    {b.status}
+                  <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider ${b.status === 'pending_payment' ? 'bg-yellow-500/10 text-yellow-500' : b.status === 'failed' ? 'bg-red-500/10 text-red-500' : b.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-400'}`}>
+                    {b.status === 'pending_payment' ? 'Pending' : b.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right space-x-1">

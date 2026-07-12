@@ -80,8 +80,8 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase ${booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
-                    {booking.status}
+                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase ${booking.status === 'pending_payment' || booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' : booking.status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                    {booking.status === 'pending_payment' ? 'Pending' : booking.status}
                   </span>
                 </div>
               </div>
