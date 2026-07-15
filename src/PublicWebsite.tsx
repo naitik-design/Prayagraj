@@ -591,11 +591,6 @@ export default function PublicWebsite() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-
     // Initialize Lenis smooth scroll
     const lenis = new Lenis({
       duration: 1.2,
@@ -603,7 +598,10 @@ export default function PublicWebsite() {
       smoothWheel: true,
     });
 
-    lenis.on('scroll', ScrollTrigger.update);
+    lenis.on('scroll', (e: any) => {
+      ScrollTrigger.update();
+      setIsScrolled(e.scroll > 50);
+    });
 
     const updatePhysics = (time: number) => {
       lenis.raf(time * 1000);
@@ -611,18 +609,27 @@ export default function PublicWebsite() {
     gsap.ticker.add(updatePhysics);
     gsap.ticker.lagSmoothing(0);
 
-    // Custom luxury cursor
+    // Custom luxury cursor using high-performance GSAP quickTo tracking
     const cursor = document.querySelector(".custom-cursor") as HTMLElement;
     const glow = document.querySelector(".custom-cursor-glow") as HTMLElement;
 
-    const onMouseMove = (e: MouseEvent) => {
-      if (cursor && glow) {
-        gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.05, ease: "power2.out" });
-        gsap.to(glow, { x: e.clientX, y: e.clientY, duration: 0.25, ease: "power2.out" });
-      }
-    };
+    let onMouseMove = (e: MouseEvent) => {};
 
-    window.addEventListener("mousemove", onMouseMove);
+    if (cursor && glow) {
+      const xToCursor = gsap.quickTo(cursor, "x", { duration: 0.05, ease: "power2.out" });
+      const yToCursor = gsap.quickTo(cursor, "y", { duration: 0.05, ease: "power2.out" });
+      const xToGlow = gsap.quickTo(glow, "x", { duration: 0.25, ease: "power2.out" });
+      const yToGlow = gsap.quickTo(glow, "y", { duration: 0.25, ease: "power2.out" });
+
+      onMouseMove = (e: MouseEvent) => {
+        xToCursor(e.clientX);
+        yToCursor(e.clientY);
+        xToGlow(e.clientX);
+        yToGlow(e.clientY);
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+    }
 
     const handleMouseEnter = () => {
       if (glow) {
@@ -768,7 +775,6 @@ export default function PublicWebsite() {
     }
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
       gsap.ticker.remove(updatePhysics);
       lenis.destroy();
       window.removeEventListener("mousemove", onMouseMove);

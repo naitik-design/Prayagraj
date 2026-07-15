@@ -6,25 +6,33 @@ import * as THREE from 'three';
 function CinematicDustParticles() {
   const pointsRef = useRef<THREE.Points>(null);
   const geomRef = useRef<THREE.BufferGeometry>(null);
-  const count = 1200; // Premium abundance of particles
+
+  // Dynamic particle count based on screen size/device capability
+  const count = useMemo(() => {
+    if (typeof window === 'undefined') return 1200;
+    if (window.innerWidth < 768) return 300; // Mobile
+    if (window.innerWidth < 1024) return 600; // Tablet
+    return 1200; // Desktop
+  }, []);
 
   // Dynamic procedural gold bokeh glow texture
   const particleTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 32; // Optimized from 64 to 32 for lower memory and faster bindings
+    canvas.height = 32;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
       gradient.addColorStop(0.15, 'rgba(212, 175, 55, 0.95)'); // Luxury gold center core
       gradient.addColorStop(0.35, 'rgba(212, 175, 55, 0.4)');   // Soft gold glow
       gradient.addColorStop(0.65, 'rgba(212, 175, 55, 0.08)');  // Outer golden haze
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 64, 64);
+      ctx.fillRect(0, 0, 32, 32);
     }
     const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
     return texture;
   }, []);
 
@@ -42,7 +50,16 @@ function CinematicDustParticles() {
       speed[i] = 0.03 + Math.random() * 0.12;
     }
     return [pos, phase, speed];
-  }, []);
+  }, [count]);
+
+  useEffect(() => {
+    return () => {
+      particleTexture.dispose();
+      if (geomRef.current) {
+        geomRef.current.dispose();
+      }
+    };
+  }, [particleTexture]);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -102,79 +119,143 @@ function CinematicDustParticles() {
   );
 }
 
-function HotelBuilding({ entranceProgress }: { entranceProgress: number }) {
-  // Use entranceProgress to fade in emissive lights
-  const windowOpacity = 0.3 + Math.random() * 0.5 * entranceProgress;
-  
+function HotelBuilding() {
+  const crownMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const doorMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const centerWinMaterials = useRef<THREE.MeshBasicMaterial[]>([]);
+  const sideWinMaterials = useRef<THREE.MeshBasicMaterial[]>([]);
+
+  // Stable pseudo-random window opacities to prevent flickering/re-rendering randoms
+  const { centerOpacities, sideOpacities } = useMemo(() => {
+    return {
+      centerOpacities: Array.from({ length: 7 }).map(() => 0.2 + Math.random() * 0.4),
+      sideOpacities: Array.from({ length: 6 }).map(() => 0.1 + Math.random() * 0.3),
+    };
+  }, []);
+
+  // Shared geometries to prevent garbage collection overhead inside renders
+  const geometries = useMemo(() => {
+    return {
+      tower: new THREE.BoxGeometry(2.5, 8, 2.5),
+      crown: new THREE.BoxGeometry(2.3, 0.5, 2.3),
+      wing: new THREE.BoxGeometry(3, 4, 2),
+      winCenter: new THREE.PlaneGeometry(1.5, 0.4),
+      winSide: new THREE.PlaneGeometry(2, 0.4),
+      entrance: new THREE.BoxGeometry(4, 1.5, 1),
+      doors: new THREE.PlaneGeometry(1.2, 1.0),
+      pillar: new THREE.CylinderGeometry(0.05, 0.05, 1.5),
+    };
+  }, []);
+
+  // Shared materials to avoid GPU state bindings and CPU instantiation overhead
+  const materials = useMemo(() => {
+    return {
+      tower: new THREE.MeshStandardMaterial({ color: "#0A0A0C", roughness: 0.1, metalness: 0.9 }),
+      wing: new THREE.MeshStandardMaterial({ color: "#0A0A0C", roughness: 0.1, metalness: 0.8 }),
+      entrance: new THREE.MeshStandardMaterial({ color: "#050505", roughness: 0.5, metalness: 0.5 }),
+      pillar: new THREE.MeshStandardMaterial({ color: "#D4AF37", metalness: 1 }),
+    };
+  }, []);
+
+  // Dispose geometries and materials on unmount to prevent GPU memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(geometries).forEach(g => g.dispose());
+      Object.values(materials).forEach(m => m.dispose());
+    };
+  }, [geometries, materials]);
+
+  useFrame((state) => {
+    const elapsed = state.clock.getElapsedTime();
+    const progress = Math.min(1, elapsed / 3);
+    
+    if (crownMaterialRef.current) {
+      crownMaterialRef.current.emissiveIntensity = progress;
+    }
+    if (doorMaterialRef.current) {
+      doorMaterialRef.current.opacity = progress;
+    }
+    
+    // Performance safe - mutate properties directly in WebGL on references rather than triggering React state cycles
+    centerWinMaterials.current.forEach((mat, idx) => {
+      if (mat) mat.opacity = centerOpacities[idx] * progress;
+    });
+    
+    sideWinMaterials.current.forEach((mat, idx) => {
+      if (mat) mat.opacity = sideOpacities[idx] * progress;
+    });
+  });
+
   return (
     <group position={[0, -1, 0]}>
       {/* Central Tower */}
-      <mesh position={[0, 3, 0]} castShadow receiveShadow>
-        <boxGeometry args={[2.5, 8, 2.5]} />
-        <meshStandardMaterial color="#0A0A0C" roughness={0.1} metalness={0.9} />
-      </mesh>
+      <mesh geometry={geometries.tower} material={materials.tower} position={[0, 3, 0]} castShadow receiveShadow />
       
       {/* Golden Crown */}
-      <mesh position={[0, 7.2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[2.3, 0.5, 2.3]} />
-        <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1} emissive="#4a3a00" emissiveIntensity={entranceProgress} />
+      <mesh geometry={geometries.crown} position={[0, 7.2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial 
+          ref={crownMaterialRef} 
+          color="#D4AF37" 
+          roughness={0.2} 
+          metalness={1} 
+          emissive="#4a3a00" 
+          emissiveIntensity={0} 
+        />
       </mesh>
 
       {/* East Wing */}
-      <mesh position={[2.5, 1, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3, 4, 2]} />
-        <meshStandardMaterial color="#0A0A0C" roughness={0.1} metalness={0.8} />
-      </mesh>
+      <mesh geometry={geometries.wing} material={materials.wing} position={[2.5, 1, 0]} castShadow receiveShadow />
 
       {/* West Wing */}
-      <mesh position={[-2.5, 1, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3, 4, 2]} />
-        <meshStandardMaterial color="#0A0A0C" roughness={0.1} metalness={0.8} />
-      </mesh>
+      <mesh geometry={geometries.wing} material={materials.wing} position={[-2.5, 1, 0]} castShadow receiveShadow />
 
       {/* Windows glow (Front) */}
       {Array.from({ length: 7 }).map((_, i) => (
-        <mesh key={`win-center-${i}`} position={[0, 0.5 + i * 0.9, 1.26]}>
-          <planeGeometry args={[1.5, 0.4]} />
-          <meshBasicMaterial color="#E8C76A" transparent opacity={(0.2 + Math.random() * 0.4) * entranceProgress} />
+        <mesh key={`win-center-${i}`} geometry={geometries.winCenter} position={[0, 0.5 + i * 0.9, 1.26]}>
+          <meshBasicMaterial 
+            ref={el => { if (el) centerWinMaterials.current[i] = el; }} 
+            color="#E8C76A" 
+            transparent 
+            opacity={0} 
+          />
         </mesh>
       ))}
 
+      {/* Windows glow (East) */}
       {Array.from({ length: 3 }).map((_, i) => (
-        <mesh key={`win-east-${i}`} position={[2.5, 0.5 + i * 0.9, 1.01]}>
-          <planeGeometry args={[2, 0.4]} />
-          <meshBasicMaterial color="#E8C76A" transparent opacity={(0.1 + Math.random() * 0.3) * entranceProgress} />
+        <mesh key={`win-east-${i}`} geometry={geometries.winSide} position={[2.5, 0.5 + i * 0.9, 1.01]}>
+          <meshBasicMaterial 
+            ref={el => { if (el) sideWinMaterials.current[i] = el; }} 
+            color="#E8C76A" 
+            transparent 
+            opacity={0} 
+          />
         </mesh>
       ))}
 
+      {/* Windows glow (West) */}
       {Array.from({ length: 3 }).map((_, i) => (
-        <mesh key={`win-west-${i}`} position={[-2.5, 0.5 + i * 0.9, 1.01]}>
-          <planeGeometry args={[2, 0.4]} />
-          <meshBasicMaterial color="#E8C76A" transparent opacity={(0.1 + Math.random() * 0.3) * entranceProgress} />
+        <mesh key={`win-west-${i}`} geometry={geometries.winSide} position={[-2.5, 0.5 + i * 0.9, 1.01]}>
+          <meshBasicMaterial 
+            ref={el => { if (el) sideWinMaterials.current[i + 3] = el; }} 
+            color="#E8C76A" 
+            transparent 
+            opacity={0} 
+          />
         </mesh>
       ))}
 
       {/* Grand Entrance */}
-      <mesh position={[0, -0.2, 1.4]} castShadow>
-        <boxGeometry args={[4, 1.5, 1]} />
-        <meshStandardMaterial color="#050505" roughness={0.5} metalness={0.5} />
-      </mesh>
+      <mesh geometry={geometries.entrance} material={materials.entrance} position={[0, -0.2, 1.4]} castShadow />
       
       {/* Entrance doors glowing */}
-      <mesh position={[0, -0.4, 1.91]}>
-        <planeGeometry args={[1.2, 1.0]} />
-        <meshBasicMaterial color="#D4AF37" transparent opacity={entranceProgress} />
+      <mesh geometry={geometries.doors} position={[0, -0.4, 1.91]}>
+        <meshBasicMaterial ref={doorMaterialRef} color="#D4AF37" transparent opacity={0} />
       </mesh>
       
       {/* Canopy pillars */}
-      <mesh position={[-1.8, -0.2, 1.8]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 1.5]} />
-        <meshStandardMaterial color="#D4AF37" metalness={1} />
-      </mesh>
-      <mesh position={[1.8, -0.2, 1.8]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 1.5]} />
-        <meshStandardMaterial color="#D4AF37" metalness={1} />
-      </mesh>
+      <mesh geometry={geometries.pillar} material={materials.pillar} position={[-1.8, -0.2, 1.8]} castShadow />
+      <mesh geometry={geometries.pillar} material={materials.pillar} position={[1.8, -0.2, 1.8]} castShadow />
     </group>
   );
 }
@@ -183,24 +264,17 @@ function SceneControls() {
   const { camera, scene } = useThree();
   const group = useRef<THREE.Group>(null);
   
-  // Create a target vector to reuse
+  // Create static target vector to reuse across frames
   const target = useRef(new THREE.Vector3(0, 2, 0));
-  
-  const [entranceProgress, setEntranceProgress] = useState(0);
 
   useFrame((state) => {
     const scrollY = window.scrollY;
-    
-    // Entrance animation
-    if (state.clock.elapsedTime < 5) {
-      setEntranceProgress(Math.min(1, state.clock.elapsedTime / 3));
-    } else if (entranceProgress !== 1) {
-      setEntranceProgress(1);
-    }
+    const elapsed = state.clock.getElapsedTime();
+    const entranceProgress = Math.min(1, elapsed / 3);
     
     if (group.current) {
       // Gentle rotation over time
-      group.current.rotation.y = state.clock.elapsedTime * 0.02;
+      group.current.rotation.y = elapsed * 0.02;
     }
     
     // Parallax on scroll and mouse position
@@ -229,7 +303,7 @@ function SceneControls() {
   return (
     <group ref={group}>
       <Float speed={1} rotationIntensity={0.05} floatIntensity={0.1} floatingRange={[-0.1, 0.1]}>
-        <HotelBuilding entranceProgress={entranceProgress} />
+        <HotelBuilding />
       </Float>
       
       {/* Floating particles - Gold Dust & Cinematic Sanctuary floating dust */}
@@ -249,11 +323,33 @@ function SceneControls() {
 }
 
 export default function Hero3D() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(true);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Pause rendering loop completely when Hero3D is out of screen viewport to save 100% GPU / CPU
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(el);
+    return () => {
+      observer.unobserve(el);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 -z-10 bg-[#050505]">
+    <div ref={containerRef} className="fixed inset-0 -z-10 bg-[#050505]">
       <Canvas 
         camera={{ position: [0, 2, 20], fov: 45 }}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, powerPreference: "high-performance" }}
+        frameloop={isInView ? "always" : "never"}
       >
         <color attach="background" args={['#050505']} />
         
