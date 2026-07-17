@@ -66,7 +66,7 @@ export default function Login() {
             >
               Control Room
             </motion.h1>
-            <p className="text-[#D4AF37] text-xs tracking-[0.3em] uppercase opacity-80">Hotel Prayagraj</p>
+            <p className="text-[#D4AF37] text-xs tracking-[0.3em] uppercase opacity-80">Hotel Jaipur Rajwada</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">

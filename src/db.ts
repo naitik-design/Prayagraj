@@ -12,19 +12,19 @@ const defaultData = {
   ],
   bookings: [],
   content: {
-    hero: { title: 'Hotel Prayagraj', subtitle: 'A premium sanctuary blending modern comfort with traditional Rajasthani warmth.' },
-    about: { text: 'Located near the holy Khatu Shyam Ji Temple.' }
+    hero: { title: 'Hotel Jaipur Rajwada', subtitle: 'Experience the royal heritage and timeless elegance of Rajasthan.' },
+    about: { text: 'Located in the serene surroundings of Achrol on the Delhi-Jaipur highway.' }
   },
   gallery: [],
   attractions: [],
   settings: {
-    hotelName: 'Hotel Prayagraj',
-    phone: '+91 75971 17839',
-    email: 'info@prayagrajhotel.com',
-    whatsapp: '+91 75971 17839',
-    address: '2–3 Shree Shyam Vihar Colony, Reengus, Rajasthan 332404',
+    hotelName: 'Hotel Jaipur Rajwada',
+    phone: '+91 078779 58308',
+    email: 'info@hoteljaipurrajwada.com',
+    whatsapp: '+91 078779 58308',
+    address: 'Syari, Talamod, Delhi–Jaipur Road, NH-11C, Achrol, Rajasthan 303002',
     chatbotEnabled: true,
-    chatbotPrompt: 'You are Prayagraj Concierge...'
+    chatbotPrompt: 'You are Jaipur Rajwada Concierge...'
   },
   conversations: []
 };

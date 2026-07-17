@@ -375,7 +375,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
           key: data.key,
           amount: data.amount,
           currency: data.currency,
-          name: "Hotel Prayagraj",
+          name: "Hotel Jaipur Rajwada",
           description: "Room Booking Payment",
           order_id: data.orderId,
           handler: async function (response: any) {
@@ -424,7 +424,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
   const getWhatsAppLink = () => {
     const room = rooms?.find(r => r.id === formData.roomId);
     const roomName = room ? room.name : '';
-    let text = `Hello Hotel Prayagraj! I would like to make a booking inquiry.`;
+    let text = `Hello Hotel Jaipur Rajwada! I would like to make a booking inquiry.`;
     if (formData.guestName) text += `\nName: ${formData.guestName}`;
     if (formData.guestPhone) text += `\nPhone: ${formData.guestPhone}`;
     if (formData.guestEmail) text += `\nEmail: ${formData.guestEmail}`;
@@ -433,7 +433,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
     if (formData.checkIn) text += `\nCheck-In: ${formData.checkIn}`;
     if (formData.checkOut) text += `\nCheck-Out: ${formData.checkOut}`;
     
-    const cleanPhone = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, "") : "917597117839";
+    const cleanPhone = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, "") : "917877958308";
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
   };
 
@@ -824,7 +824,7 @@ export default function PublicWebsite() {
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <a href="#home" className="flex items-center gap-2">
             <h1 className={`font-serif text-2xl font-bold tracking-widest uppercase text-white drop-shadow-md`}>
-              Hotel Prayagraj
+              Hotel Jaipur Rajwada
             </h1>
           </a>
 
@@ -909,7 +909,7 @@ export default function PublicWebsite() {
           
           <h1 className="hero-title text-4xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight drop-shadow-2xl opacity-0">
             Welcome to <br className="md:hidden" />
-            <span className="text-primary drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">Hotel Prayagraj</span>
+            <span className="text-primary drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">Hotel Jaipur Rajwada</span>
           </h1>
           
           <p className="hero-subtitle text-lg md:text-2xl text-white/80 font-light mb-12 tracking-wide opacity-0">
@@ -927,7 +927,7 @@ export default function PublicWebsite() {
             </MagneticButton>
             <MagneticButton className="w-full sm:flex-1">
               <a
-                href={`https://wa.me/${(publicData?.settings?.whatsapp || "917597117839").replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello Hotel Prayagraj! I would like to inquire about booking a room stay.")}`}
+                href={`https://wa.me/${(publicData?.settings?.whatsapp || "917877958308").replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello Hotel Jaipur Rajwada! I would like to inquire about booking a room stay.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hero-btn block px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-medium tracking-[0.15em] uppercase hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2 text-xs opacity-0"
@@ -938,7 +938,7 @@ export default function PublicWebsite() {
             </MagneticButton>
             <MagneticButton className="w-full sm:flex-1">
               <a
-                href={`tel:${publicData?.settings?.phone || "+917597117839"}`}
+                href={`tel:${publicData?.settings?.phone || "+917877958308"}`}
                 className="hero-btn block px-8 py-4 bg-white/5 backdrop-blur-md border border-white/20 text-white rounded-full font-medium tracking-[0.15em] uppercase hover:bg-white/10 transition-all flex items-center justify-center gap-2 text-xs opacity-0"
               >
                 <Phone className="w-4 h-4 text-primary" />
@@ -965,10 +965,9 @@ export default function PublicWebsite() {
               Experience Comfortable Stay with Traditional Hospitality
             </CinematicHeading>
             <p className="text-lg text-white/80 leading-relaxed font-light mb-8 paragraph-animate">
-              Welcome to Hotel Prayagraj, a premium sanctuary located in the heart of Reengus, Rajasthan. 
+              Welcome to Hotel Jaipur Rajwada, a premium sanctuary located in the serene surroundings of Achrol on the Delhi-Jaipur highway. 
               We blend modern comfort, impeccable cleanliness, and the renowned warmth of traditional Rajasthani 
-              hospitality to create unforgettable experiences for our guests. Situated conveniently near the 
-              revered Khatu Shyam Ji Temple, we provide the perfect resting place for pilgrims and travelers alike.
+              hospitality to create unforgettable experiences for our guests. Situated conveniently, we provide the perfect resting place for travelers seeking comfort and cultural richness.
             </p>
             <div className="w-24 h-1 bg-primary opacity-80" />
           </motion.div>
@@ -1045,7 +1044,7 @@ export default function PublicWebsite() {
                   </MagneticButton>
                   <MagneticButton>
                     <a 
-                      href={`https://wa.me/${(publicData?.settings?.whatsapp || "917597117839").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello Hotel Prayagraj! I am interested in booking the ${room.name} (price: ₹${room.price}/night). Please let me know the availability.`)}`}
+                      href={`https://wa.me/${(publicData?.settings?.whatsapp || "917877958308").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello Hotel Jaipur Rajwada! I am interested in booking the ${room.name} (price: ₹${room.price}/night). Please let me know the availability.`)}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="block w-full py-3 bg-emerald-600 text-white text-center rounded hover:bg-emerald-500 transition-all text-sm tracking-[0.1em] uppercase flex items-center justify-center gap-2"
@@ -1104,8 +1103,8 @@ export default function PublicWebsite() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="h-[400px] w-full">
             <TiltImage
-              src="https://images.unsplash.com/photo-1477587458883-47145ed94245?q=80&w=2070&auto=format&fit=crop"
-              alt="Khatu Shyam Ji Temple area"
+              src="https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540218.jpg?k=cf9228d43d6a695d8cd688229b439c14c5c7d0d08779b5c54d7edfae52642a8b&o=&hp=1"
+              alt="Hotel Jaipur Rajwada Exterior"
               className="rounded-2xl shadow-2xl h-[400px] w-full"
             />
           </div>
@@ -1114,13 +1113,13 @@ export default function PublicWebsite() {
               Nearby Attraction
             </h2>
             <CinematicHeading className="text-3xl md:text-5xl font-serif font-bold mb-6 text-white">
-              Khatu Shyam Ji Temple
+              Discover Jaipur
             </CinematicHeading>
             <p className="text-white/80 leading-relaxed font-light mb-8 text-lg paragraph-animate">
-              Hotel Prayagraj is strategically and conveniently located for pilgrims and travelers 
-              visiting the holy Khatu Shyam Ji Temple. Experience spiritual tranquility just a 
+              Hotel Jaipur Rajwada is strategically and conveniently located for travelers 
+              visiting the vibrant city of Jaipur. Experience spiritual tranquility and royal heritage just a 
               short journey from your comfortable room. Our dedicated staff can assist you with 
-              travel arrangements and local guidance to ensure a peaceful pilgrimage.
+              travel arrangements and local guidance to ensure a memorable stay.
             </p>
             <MagneticButton>
               <a
@@ -1156,9 +1155,9 @@ export default function PublicWebsite() {
                 <div>
                   <h4 className="font-serif font-bold text-xl mb-2 text-white">Location</h4>
                   <p className="text-white/70 font-light">
-                    2–3 Shree Shyam Vihar Colony,<br />
-                    Khatu Shyamji Road, Near Shiva Temple,<br />
-                    Reengus, Rajasthan 332404
+                    Syari, Talamod,<br />
+                    Delhi–Jaipur Road, NH-11C,<br />
+                    Achrol, Rajasthan 303002
                   </p>
                 </div>
               </div>
@@ -1170,9 +1169,7 @@ export default function PublicWebsite() {
                 <div>
                   <h4 className="font-serif font-bold text-xl mb-2 text-white">Phone</h4>
                   <p className="text-white/70 font-light flex flex-col gap-1">
-                    <a href="tel:+917597117839" className="hover:text-primary transition-colors">+91 75971 17839</a>
-                    <a href="tel:+919694056634" className="hover:text-primary transition-colors">+91 96940 56634</a>
-                    <a href="tel:+919921936383" className="hover:text-primary transition-colors">+91 99219 36383</a>
+                    <a href="tel:+917877958308" className="hover:text-primary transition-colors">+91 078779 58308</a>
                   </p>
                 </div>
               </div>
@@ -1183,8 +1180,8 @@ export default function PublicWebsite() {
                 </div>
                 <div>
                   <h4 className="font-serif font-bold text-xl mb-2 text-white">Email</h4>
-                  <a href="mailto:info@prayagrajhotel.com" className="text-white/70 font-light hover:text-primary transition-colors">
-                    info@prayagrajhotel.com
+                  <a href="mailto:info@hoteljaipurrajwada.com" className="text-white/70 font-light hover:text-primary transition-colors">
+                    info@hoteljaipurrajwada.com
                   </a>
                 </div>
               </div>
@@ -1202,14 +1199,14 @@ export default function PublicWebsite() {
           {/* Map */}
           <div className="contact-card mt-12 h-96 rounded-2xl overflow-hidden shadow-lg border border-white/10 opacity-0 mix-blend-luminosity hover:mix-blend-normal hover:opacity-100 transition-all duration-500">
             <iframe 
-              src="https://maps.google.com/maps?q=Hotel%20Prayagraj,%20shree%20Shyam%20Vihar%20Colony,%202-3,%20Khatushyamji%20Road,%20near%20Shiva%20Temple,%20Reengus,%20Rajasthan%20332404&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+              src="https://maps.google.com/maps?q=Hotel%20Jaipur%20Rajwada,%20Syari,%20Talamod,%20Delhi%E2%80%93Jaipur%20Road,%20NH-11C,%20Achrol,%20Rajasthan%20303002&t=&z=15&ie=UTF8&iwloc=&output=embed" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 
               allowFullScreen={true} 
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
-              title="Hotel Prayagraj Location"
+              title="Hotel Jaipur Rajwada Location"
             ></iframe>
           </div>
         </div>
@@ -1219,7 +1216,7 @@ export default function PublicWebsite() {
       <footer className="bg-black/60 backdrop-blur-md text-white pt-16 pb-8 px-6 relative z-10 border-t border-white/10">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 mb-12 border-b border-white/10 pb-12">
           <div className="md:col-span-1">
-            <h4 className="font-serif text-2xl font-bold mb-6 text-white">HOTEL PRAYAGRAJ</h4>
+            <h4 className="font-serif text-2xl font-bold mb-6 text-white">HOTEL JAIPUR RAJWADA</h4>
             <p className="text-white/70 font-light mb-6">
               Where Hospitality Meets Traditional Rajasthani Warmth.
             </p>
@@ -1247,22 +1244,22 @@ export default function PublicWebsite() {
             <ul className="flex flex-col gap-4 text-white/70 font-light">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0 mt-1" />
-                <span>2–3 Shree Shyam Vihar Colony, Khatu Shyamji Road, Near Shiva Temple, Reengus, Rajasthan 332404</span>
+                <span>Syari, Talamod, Delhi–Jaipur Road, NH-11C, Achrol, Rajasthan 303002</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <span>+91 75971 17839 / +91 96940 56634 / +91 99219 36383</span>
+                <span>+91 078779 58308</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
-                <span>info@prayagrajhotel.com</span>
+                <span>info@hoteljaipurrajwada.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/50 font-light">
-          <p>&copy; {new Date().getFullYear()} Hotel Prayagraj. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Hotel Jaipur Rajwada. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms and conditions</a>

@@ -46,7 +46,7 @@ export default function DashboardLayout() {
       >
         <div className="p-8 border-b border-white/5">
           <h2 className="font-serif text-xl tracking-widest uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">Control Room</h2>
-          <p className="text-[#D4AF37] text-[10px] tracking-[0.3em] uppercase mt-2 opacity-80">Hotel Prayagraj</p>
+          <p className="text-[#D4AF37] text-[10px] tracking-[0.3em] uppercase mt-2 opacity-80">Hotel Jaipur Rajwada</p>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">

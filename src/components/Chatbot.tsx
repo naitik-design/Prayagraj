@@ -152,7 +152,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Namaste! Welcome to Hotel Prayagraj. How can I assist you today?",
+      text: "Namaste! Welcome to Hotel Jaipur Rajwada. How can I assist you today?",
       sender: "bot",
     },
   ]);
@@ -213,7 +213,7 @@ export default function Chatbot() {
       console.error("Chat API connection error:", error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I'm having trouble connecting right now. Please call us at +91 75971 17839 for assistance.",
+        text: "I'm sorry, I'm having trouble connecting right now. Please call us at +91 078779 58308 for assistance.",
         sender: "bot",
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -274,7 +274,7 @@ export default function Chatbot() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Prayagraj Concierge</h3>
+                  <h3 className="font-medium text-sm">Jaipur Rajwada Concierge</h3>
                   <p className="text-xs text-white/70 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-green-400"></span>{" "}
                     Online

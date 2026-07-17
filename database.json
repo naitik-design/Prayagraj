@@ -1,82 +1,69 @@
 {
+  "attractions": [],
   "rooms": [
     {
+      "featured": true,
+      "price": 3500,
+      "name": "Deluxe Heritage Room",
       "id": "1",
-      "name": "Deluxe Room",
-      "price": 2500,
-      "discount": 0,
+      "images": [
+        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540209.jpg?k=23b46cf3fc50c7cd1cf6f2a6cd05a305d23340f1a92e10696a60368a8ed50882&o=&hp=1"
+      ],
       "type": "Couples",
       "available": true,
-      "featured": true,
-      "capacity": 2,
-      "amenities": [
-        "Wifi",
-        "AC"
-      ],
-      "images": [
-        "/images/deluxe_room_1783739111901.jpg"
-      ]
-    },
-    {
-      "id": "2",
-      "name": "Family Suite",
-      "price": 4500,
       "discount": 0,
-      "type": "Family",
-      "available": true,
-      "featured": false,
-      "capacity": 4,
       "amenities": [
         "Wifi",
         "AC",
-        "Kitchen"
+        "Smart TV",
+        "Room Service"
       ],
+      "capacity": 2
+    },
+    {
+      "featured": true,
+      "price": 5500,
+      "name": "Royal Rajwada Suite",
+      "id": "2",
       "images": [
-        "/images/family_suite_1783739124830.jpg"
-      ]
+        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540213.jpg?k=95b6c2cb46a9a3f2debcbc4be3540c1a967a216cb4ce79933cc48cd024cf414e&o=&hp=1"
+      ],
+      "type": "Family",
+      "discount": 0,
+      "available": true,
+      "amenities": [
+        "Wifi",
+        "AC",
+        "Mini Bar",
+        "Bathtub",
+        "Living Area"
+      ],
+      "capacity": 4
     }
   ],
-  "bookings": [],
+  "conversations": [],
+  "gallery": [
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540194.jpg?k=b4e9426f8d3886d38e93df7b9bb96ef128dcf92226f958f000b21a719d3f572a&o=&hp=1",
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540192.jpg?k=b6f5cfd0d347d27e8d667c29367af4a2e5d71cdb0d2d3466f228b3f11d13b48f&o=&hp=1",
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540218.jpg?k=cf9228d43d6a695d8cd688229b439c14c5c7d0d08779b5c54d7edfae52642a8b&o=&hp=1"
+  ],
+  "settings": {
+    "address": "Syari, Talamod, Delhi–Jaipur Road, NH-11C, Achrol, Rajasthan 303002",
+    "email": "info@hoteljaipurrajwada.com",
+    "chatbotEnabled": true,
+    "phone": "+91 78779 58308",
+    "chatbotPrompt": "You are Jaipur Rajwada Concierge. You are a helpful assistant for Hotel Jaipur Rajwada.",
+    "hotelName": "Hotel Jaipur Rajwada",
+    "whatsapp": "+91 78779 58308"
+  },
   "content": {
     "hero": {
-      "title": "Hotel Prayagraj",
-      "subtitle": "A premium sanctuary blending modern comfort with traditional Rajasthani warmth."
+      "title": "Hotel Jaipur Rajwada",
+      "subtitle": "Experience the royal heritage and timeless elegance of Rajasthan."
     },
     "about": {
-      "text": "Located near the holy Khatu Shyam Ji Temple."
+      "text": "Located in the serene surroundings of Achrol on the Delhi-Jaipur highway, Hotel Jaipur Rajwada offers a perfect blend of traditional Rajasthani hospitality and modern luxury. A perfect getaway for travelers seeking comfort and cultural richness."
     }
   },
-  "gallery": [],
-  "attractions": [],
-  "settings": {
-    "hotelName": "Hotel Prayagraj",
-    "phone": "+91 75971 17839",
-    "email": "info@prayagrajhotel.com",
-    "whatsapp": "+91 75971 17839",
-    "address": "2–3 Shree Shyam Vihar Colony, Reengus, Rajasthan 332404",
-    "chatbotEnabled": true,
-    "chatbotPrompt": "You are Prayagraj Concierge..."
-  },
-  "conversations": [
-    {
-      "id": "1783739162364",
-      "timestamp": "2026-07-11T03:06:02.364Z",
-      "messages": [
-        {
-          "id": "1",
-          "text": "Namaste! Welcome to Hotel Prayagraj. How can I assist you today?",
-          "sender": "bot"
-        },
-        {
-          "id": "1783739159499",
-          "text": "Hii",
-          "sender": "user"
-        },
-        {
-          "sender": "bot",
-          "text": "Namaste! A very warm welcome to you. How are you doing today? \n\nWhether you need assistance with your room, recommendations for local sightseeing in the holy city of Prayagraj, travel arrangements, or dining suggestions, I am here to ensure you have a comfortable and memorable stay.\n\nHow may I assist you this morning?"
-        }
-      ]
-    }
-  ]
+  "bookings": []
 }
