@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
@@ -27,15 +27,15 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
-import Hero3D from "./components/Hero3D";
-import Chatbot from "./components/Chatbot";
-import About3D from "./components/About3D";
-import LofiPlayer from "./components/LofiPlayer";
+const Hero3D = lazy(() => import("./components/Hero3D"));
+const Chatbot = lazy(() => import("./components/Chatbot"));
+const About3D = lazy(() => import("./components/About3D"));
+const LofiPlayer = lazy(() => import("./components/LofiPlayer"));
 import { usePublicData } from "./PublicWebsiteData";
 
 // --- PREMIUM SCROLL & INTERACTIVE ANIMATION COMPONENTS ---
 
-function FloatingParticles() {
+const FloatingParticles = memo(function FloatingParticles() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,6 +44,7 @@ function FloatingParticles() {
 
     const count = 30;
     const particles: HTMLDivElement[] = [];
+    const tweens: gsap.core.Tween[] = [];
 
     for (let i = 0; i < count; i++) {
       const particle = document.createElement("div");
@@ -61,7 +62,7 @@ function FloatingParticles() {
       particles.push(particle);
 
       // Float animation
-      gsap.to(particle, {
+      const tween = gsap.to(particle, {
         x: () => (Math.random() - 0.5) * 150,
         y: () => (Math.random() - 0.5) * 150,
         opacity: () => Math.random() * 0.4 + 0.05,
@@ -70,17 +71,32 @@ function FloatingParticles() {
         yoyo: true,
         ease: "sine.inOut",
       });
+      tweens.push(tween);
     }
 
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tweens.forEach(t => t.play());
+        } else {
+          tweens.forEach(t => t.pause());
+        }
+      });
+    }, { threshold: 0 });
+
+    observer.observe(container);
+
     return () => {
+      observer.disconnect();
+      tweens.forEach(t => t.kill());
       particles.forEach(p => p.remove());
     };
   }, []);
 
   return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-50" />;
-}
+});
 
-function CinematicHeading({ children, className = "", id = "" }: { children: string, className?: string, id?: string }) {
+const CinematicHeading = memo(function CinematicHeading({ children, className = "", id = "" }: { children: string, className?: string, id?: string }) {
   const containerRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -124,9 +140,9 @@ function CinematicHeading({ children, className = "", id = "" }: { children: str
       ))}
     </h3>
   );
-}
+});
 
-function TiltImage({ src, alt, className = "", children }: { src: string, alt: string, className?: string, children?: React.ReactNode }) {
+const TiltImage = memo(function TiltImage({ src, alt, className = "", children }: { src: string, alt: string, className?: string, children?: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const reflectionRef = useRef<HTMLDivElement>(null);
@@ -222,6 +238,8 @@ function TiltImage({ src, alt, className = "", children }: { src: string, alt: s
         ref={imgRef}
         src={src}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover select-none pointer-events-none origin-center"
       />
       {/* Premium Glass reflection overlay */}
@@ -235,9 +253,9 @@ function TiltImage({ src, alt, className = "", children }: { src: string, alt: s
       {children}
     </div>
   );
-}
+});
 
-function MagneticButton({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+const MagneticButton = memo(function MagneticButton({ children, className = "" }: { children: React.ReactNode, className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -278,7 +296,7 @@ function MagneticButton({ children, className = "" }: { children: React.ReactNod
       </div>
     </div>
   );
-}
+});
 
 
 function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?: string }) {
@@ -628,7 +646,7 @@ export default function PublicWebsite() {
         yToGlow(e.clientY);
       };
 
-      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mousemove", onMouseMove, { passive: true });
     }
 
     const handleMouseEnter = () => {
@@ -654,8 +672,8 @@ export default function PublicWebsite() {
 
     const interactives = document.querySelectorAll('a, button, input, select, textarea, [role="button"], .tilt-container');
     interactives.forEach(el => {
-      el.addEventListener("mouseenter", handleMouseEnter);
-      el.addEventListener("mouseleave", handleMouseLeave);
+      el.addEventListener("mouseenter", handleMouseEnter, { passive: true });
+      el.addEventListener("mouseleave", handleMouseLeave, { passive: true });
     });
 
     // Hero intro animations with GSAP
@@ -814,7 +832,9 @@ export default function PublicWebsite() {
       {/* Custom luxury cursor */}
       <div className="custom-cursor pointer-events-none" />
       <div className="custom-cursor-glow pointer-events-none" />
-      <Hero3D />
+      <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
+        <Hero3D />
+      </Suspense>
       {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -977,7 +997,9 @@ export default function PublicWebsite() {
             viewport={{ once: true }}
             transition={{ duration: 1 }}
           >
-            <About3D />
+            <Suspense fallback={<div className="h-full w-full bg-black/20 rounded-full" />}>
+              <About3D />
+            </Suspense>
           </motion.div>
         </div>
       </section>
@@ -1269,8 +1291,12 @@ export default function PublicWebsite() {
       
       {/* 3D Chatbot & Audio Player */}
       <div className="flex flex-col gap-4">
-        <LofiPlayer />
-        <Chatbot />
+        <Suspense fallback={null}>
+          <LofiPlayer />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Chatbot />
+        </Suspense>
       </div>
     </div>
   );

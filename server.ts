@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 import { getDb, saveDb, initDb } from "./src/db.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
@@ -140,65 +139,8 @@ app.get("/api/conversations", requireAuth, (req, res) => {
   res.json(getDb().conversations || []);
 });
 
-// AI chat route
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { messages } = req.body;
-    const db = getDb();
-    const settings = db.settings;
-    
-    if (!settings.chatbotEnabled) {
-      return res.json({ text: "I'm sorry, the chat assistant is currently disabled." });
-    }
+// AI chat route has been removed for fully offline functionality
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
-    }
-
-    const ai = new GoogleGenAI({ 
-      apiKey,
-      httpOptions: {
-        headers: { 'User-Agent': 'aistudio-build' }
-      }
-    });
-
-    // Format messages history
-    const contents = messages.map((msg: any) => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
-
-    // Start abort controller to handle timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: contents,
-      config: {
-        systemInstruction: settings.chatbotPrompt || "You are a helpful hotel assistant.",
-        temperature: 0.7,
-      }
-    });
-    
-    clearTimeout(timeoutId);
-
-    // Save conversation history
-    if (!db.conversations) db.conversations = [];
-    db.conversations.push({
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      messages: [...messages, { sender: 'bot', text: response.text }]
-    });
-    saveDb();
-
-    res.json({ text: response.text });
-  } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ error: "Failed to process chat message" });
-  }
-});
 
 // Razorpay logic
 const razorpay = new Razorpay({

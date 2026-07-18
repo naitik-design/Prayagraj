@@ -1,36 +1,69 @@
 {
   "attractions": [],
+  "bookings": [],
+  "conversations": [
+    {
+      "id": "1784296781586",
+      "timestamp": "2026-07-17T13:59:41.586Z",
+      "messages": [
+        {
+          "sender": "user",
+          "text": "What is the check in time?"
+        },
+        {
+          "sender": "bot",
+          "text": "Namaste! Welcome to Hotel Jaipur Rajwada. \n\nOur standard check-in time is **12:00 PM**, and the check-out time is **11:00 AM**. \n\nAre you planning a visit soon? I would be happy to help you with room availability or any other information you might need."
+        }
+      ]
+    }
+  ],
+  "gallery": [
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540194.jpg?k=b4e9426f8d3886d38e93df7b9bb96ef128dcf92226f958f000b21a719d3f572a&o=&hp=1",
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540192.jpg?k=b6f5cfd0d347d27e8d667c29367af4a2e5d71cdb0d2d3466f228b3f11d13b48f&o=&hp=1",
+    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540218.jpg?k=cf9228d43d6a695d8cd688229b439c14c5c7d0d08779b5c54d7edfae52642a8b&o=&hp=1"
+  ],
+  "settings": {
+    "phone": "+91 78779 58308",
+    "email": "info@hoteljaipurrajwada.com",
+    "chatbotPrompt": "You are the Jaipur Rajwada Concierge. You are a 24/7 polite, intelligent receptionist for Hotel Jaipur Rajwada. Understand and reply in English, Hindi, or mixed Hindi-English (Hinglish) as the user prefers.\n\nKey behaviors:\n- Greet guests warmly.\n- Answer questions regarding rooms, pricing, booking methods (online, walk-in, advance booking), check-in (12:00 PM) / check-out (11:00 AM) times, and cancellation policies.\n- Payment methods accepted: Cash, UPI, Credit/Debit cards. GST Invoice available.\n- ID Proof is mandatory (Aadhar/Passport/Voter ID). Foreigners need Passport & Valid Visa.\n- Food & Restaurant: We serve veg & non-veg options. Breakfast: 7:30 AM - 10:30 AM. Lunch & Dinner available. Room service is available 24/7.\n- Facilities: Free Wi-Fi, Parking, Lift, Power Backup, CCTV Security, Banquet Hall for weddings/events, Conference room.\n- Family/Kids: Kids under 5 stay free without extra bed. Extra bed is available for a fee.\n- Transport: Airport/Railway Station transfers and local sightseeing taxis can be arranged at the travel desk.\n- Nearby: We are located in Achrol. Suggest nearby landmarks based on the location.\n- Policies: Smoking allowed only in designated areas. No outside food allowed. Pets are not allowed.\n- Events: We host weddings, birthday parties, and corporate events. Please contact the hotel directly to arrange.\n- Emergency: Medical help and doctors on call are available.\n\nGuide users step by step if they wish to book. Suggest contacting the reception via Phone (+91 78779 58308) for special requests or if you do not know the answer. Never hallucinate fake information.",
+    "hotelName": "Hotel Jaipur Rajwada",
+    "whatsapp": "+91 78779 58308",
+    "address": "Syari, Talamod, Delhi–Jaipur Road, NH-11C, Achrol, Rajasthan 303002",
+    "chatbotEnabled": true
+  },
+  "content": {
+    "hero": {
+      "subtitle": "Experience the royal heritage and timeless elegance of Rajasthan.",
+      "title": "Hotel Jaipur Rajwada"
+    },
+    "about": {
+      "text": "Located in the serene surroundings of Achrol on the Delhi-Jaipur highway, Hotel Jaipur Rajwada offers a perfect blend of traditional Rajasthani hospitality and modern luxury. A perfect getaway for travelers seeking comfort and cultural richness."
+    }
+  },
   "rooms": [
     {
-      "featured": true,
-      "price": 3500,
-      "name": "Deluxe Heritage Room",
-      "id": "1",
-      "images": [
-        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540209.jpg?k=23b46cf3fc50c7cd1cf6f2a6cd05a305d23340f1a92e10696a60368a8ed50882&o=&hp=1"
-      ],
       "type": "Couples",
-      "available": true,
-      "discount": 0,
+      "capacity": 2,
       "amenities": [
         "Wifi",
         "AC",
         "Smart TV",
         "Room Service"
       ],
-      "capacity": 2
+      "id": "1",
+      "available": true,
+      "name": "Deluxe Heritage Room",
+      "featured": true,
+      "discount": 0,
+      "images": [
+        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540209.jpg?k=23b46cf3fc50c7cd1cf6f2a6cd05a305d23340f1a92e10696a60368a8ed50882&o=&hp=1"
+      ],
+      "price": 3500
     },
     {
-      "featured": true,
-      "price": 5500,
-      "name": "Royal Rajwada Suite",
-      "id": "2",
-      "images": [
-        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540213.jpg?k=95b6c2cb46a9a3f2debcbc4be3540c1a967a216cb4ce79933cc48cd024cf414e&o=&hp=1"
-      ],
       "type": "Family",
-      "discount": 0,
-      "available": true,
+      "capacity": 4,
+      "id": "2",
       "amenities": [
         "Wifi",
         "AC",
@@ -38,32 +71,14 @@
         "Bathtub",
         "Living Area"
       ],
-      "capacity": 4
+      "name": "Royal Rajwada Suite",
+      "available": true,
+      "featured": true,
+      "discount": 0,
+      "price": 5500,
+      "images": [
+        "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540213.jpg?k=95b6c2cb46a9a3f2debcbc4be3540c1a967a216cb4ce79933cc48cd024cf414e&o=&hp=1"
+      ]
     }
-  ],
-  "conversations": [],
-  "gallery": [
-    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540194.jpg?k=b4e9426f8d3886d38e93df7b9bb96ef128dcf92226f958f000b21a719d3f572a&o=&hp=1",
-    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540192.jpg?k=b6f5cfd0d347d27e8d667c29367af4a2e5d71cdb0d2d3466f228b3f11d13b48f&o=&hp=1",
-    "https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540218.jpg?k=cf9228d43d6a695d8cd688229b439c14c5c7d0d08779b5c54d7edfae52642a8b&o=&hp=1"
-  ],
-  "settings": {
-    "address": "Syari, Talamod, Delhi–Jaipur Road, NH-11C, Achrol, Rajasthan 303002",
-    "email": "info@hoteljaipurrajwada.com",
-    "chatbotEnabled": true,
-    "phone": "+91 78779 58308",
-    "chatbotPrompt": "You are Jaipur Rajwada Concierge. You are a helpful assistant for Hotel Jaipur Rajwada.",
-    "hotelName": "Hotel Jaipur Rajwada",
-    "whatsapp": "+91 78779 58308"
-  },
-  "content": {
-    "hero": {
-      "title": "Hotel Jaipur Rajwada",
-      "subtitle": "Experience the royal heritage and timeless elegance of Rajasthan."
-    },
-    "about": {
-      "text": "Located in the serene surroundings of Achrol on the Delhi-Jaipur highway, Hotel Jaipur Rajwada offers a perfect blend of traditional Rajasthani hospitality and modern luxury. A perfect getaway for travelers seeking comfort and cultural richness."
-    }
-  },
-  "bookings": []
+  ]
 }

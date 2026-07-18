@@ -52,6 +52,7 @@ body {
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 9999;
+  will-change: transform;
 }
 
 .custom-cursor-glow {
@@ -64,6 +65,7 @@ body {
   pointer-events: none;
   z-index: 9998;
   transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s;
+  will-change: transform, width, height;
 }
 
 @media (pointer: coarse) {
