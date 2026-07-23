@@ -241,6 +241,17 @@ const TiltImage = memo(function TiltImage({ src, alt, className = "", children }
         alt={alt}
         loading="lazy"
         decoding="async"
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (alt.toLowerCase().includes('deluxe')) {
+            target.src = '/images/deluxe-heritage-room.jpg';
+          } else if (alt.toLowerCase().includes('royal') || alt.toLowerCase().includes('suite')) {
+            target.src = '/images/royal-rajwada-suite.jpg';
+          } else {
+            target.src = '/images/hotel-exterior.jpg';
+          }
+        }}
         className="w-full h-full object-cover select-none pointer-events-none origin-center"
       />
       {/* Premium Glass reflection overlay */}
@@ -1158,7 +1169,7 @@ export default function PublicWebsite() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="h-[400px] w-full">
             <TiltImage
-              src="https://cf.bstatic.com/xdata/images/hotel/max1024x768/414540218.jpg?k=cf9228d43d6a695d8cd688229b439c14c5c7d0d08779b5c54d7edfae52642a8b&o=&hp=1"
+              src="/images/hotel-exterior.jpg"
               alt="Hotel Jaipur Rajwada Exterior"
               className="rounded-2xl shadow-2xl h-[400px] w-full"
             />

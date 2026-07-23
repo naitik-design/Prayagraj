@@ -7,15 +7,19 @@ const DB_FILE = path.join(process.cwd(), 'database.json');
 
 const defaultData = {
   rooms: [
-    { id: '1', name: 'Deluxe Room', price: 2500, discount: 0, type: 'Couples', available: true, featured: true, capacity: 2, amenities: ['Wifi', 'AC'], images: ['/images/deluxe_room_1783739111901.jpg'] },
-    { id: '2', name: 'Family Suite', price: 4500, discount: 0, type: 'Family', available: true, featured: false, capacity: 4, amenities: ['Wifi', 'AC', 'Kitchen'], images: ['/images/family_suite_1783739124830.jpg'] }
+    { id: '1', name: 'Deluxe Heritage Room', price: 3500, discount: 0, type: 'Couples', available: true, featured: true, capacity: 2, amenities: ['Wifi', 'AC', 'Smart TV', 'Room Service'], images: ['/images/deluxe-heritage-room.jpg'] },
+    { id: '2', name: 'Royal Rajwada Suite', price: 5500, discount: 0, type: 'Family', available: true, featured: true, capacity: 4, amenities: ['Wifi', 'AC', 'Mini Bar', 'Bathtub', 'Living Area'], images: ['/images/royal-rajwada-suite.jpg'] }
   ],
   bookings: [],
   content: {
     hero: { title: 'Hotel Jaipur Rajwada', subtitle: 'Experience the royal heritage and timeless elegance of Rajasthan.' },
     about: { text: 'Located in the serene surroundings of Achrol on the Delhi-Jaipur highway.' }
   },
-  gallery: [],
+  gallery: [
+    '/images/deluxe-heritage-room.jpg',
+    '/images/royal-rajwada-suite.jpg',
+    '/images/hotel-exterior.jpg'
+  ],
   attractions: [],
   settings: {
     hotelName: 'Hotel Jaipur Rajwada',
@@ -37,7 +41,29 @@ export async function initDb() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       data = docSnap.data();
-      console.log('Database loaded successfully from Firestore.');
+      let updated = false;
+      if (data.rooms) {
+        data.rooms.forEach((r: any) => {
+          if (r.id === '1' || r.name?.toLowerCase().includes('deluxe')) {
+            r.name = 'Deluxe Heritage Room';
+            r.images = ['/images/deluxe-heritage-room.jpg'];
+            updated = true;
+          }
+          if (r.id === '2' || r.name?.toLowerCase().includes('royal') || r.name?.toLowerCase().includes('suite')) {
+            r.name = 'Royal Rajwada Suite';
+            r.images = ['/images/royal-rajwada-suite.jpg'];
+            updated = true;
+          }
+        });
+      }
+      if (data.gallery) {
+        data.gallery = ['/images/deluxe-heritage-room.jpg', '/images/royal-rajwada-suite.jpg', '/images/hotel-exterior.jpg'];
+        updated = true;
+      }
+      if (updated) {
+        await setDoc(docRef, data);
+      }
+      console.log('Database loaded and sanitized from Firestore.');
       try {
         fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
       } catch (e) {

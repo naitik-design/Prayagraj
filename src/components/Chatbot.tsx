@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { MessageSquare, X, Send } from "lucide-react";
+import { MessageSquare, X, Send, Trash2, Sparkles, Phone, MessageCircle } from "lucide-react";
 import { Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
+import { searchFAQ, FALLBACK_ANSWER } from "../utils/faqEngine";
 
 function GoldenRobot() {
   const groupRef = useRef<THREE.Group>(null);
@@ -85,6 +86,7 @@ interface Message {
   id: string;
   text: string;
   sender: "user" | "bot";
+  category?: string;
 }
 
 function formatMessageText(text: string): React.ReactNode {
@@ -93,7 +95,7 @@ function formatMessageText(text: string): React.ReactNode {
     <div className="space-y-1.5">
       {lines.map((line, i) => {
         let trimmed = line.trim();
-        const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("* ");
+        const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("* ");
         if (isBullet) {
           trimmed = trimmed.substring(2);
         }
@@ -110,7 +112,7 @@ function formatMessageText(text: string): React.ReactNode {
           const endBoldIndex = currentText.indexOf("**", boldIndex + 2);
           if (endBoldIndex !== -1) {
             parts.push(
-              <strong key={boldIndex} className="font-semibold text-gray-950">
+              <strong key={boldIndex} className="font-semibold text-[#D4AF37]">
                 {currentText.substring(boldIndex + 2, endBoldIndex)}
               </strong>,
             );
@@ -128,8 +130,8 @@ function formatMessageText(text: string): React.ReactNode {
         if (isBullet) {
           return (
             <div key={i} className="flex items-start gap-1.5 ml-1">
-              <span className="text-[#D4AF37] select-none mt-1.5 shrink-0 text-[8px]">
-                ●
+              <span className="text-[#D4AF37] select-none mt-1 shrink-0 text-[10px]">
+                ✦
               </span>
               <span className="flex-1">{parts}</span>
             </div>
@@ -146,26 +148,28 @@ function formatMessageText(text: string): React.ReactNode {
   );
 }
 
+const DEFAULT_WELCOME_MESSAGE: Message = {
+  id: "welcome-1",
+  text: "Namaste! Welcome to Hotel Jaipur Rajwada. I am your 24/7 Concierge AI. How may I assist you with your stay, pricing, rooms, or location today?",
+  sender: "bot",
+};
+
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Namaste! Welcome to Hotel Jaipur Rajwada. I am your AI Assistant. How may I assist you today?",
-      sender: "bot",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([DEFAULT_WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickFaqs = [
-    "Do you have parking?",
-    "Can unmarried couples stay?",
-    "Where are you located?",
-    "Can I book on WhatsApp?",
-    "Room prices & types",
-    "Wedding & Banquet booking",
+    "How much does a room cost?",
+    "Where is the hotel located?",
+    "Are unmarried couples allowed?",
+    "Do you have free parking?",
+    "Is breakfast included?",
+    "Room kitne ka hai?",
+    "Location bhejo",
+    "Wedding & Banquet booking"
   ];
 
   const scrollToBottom = () => {
@@ -174,59 +178,36 @@ export default function Chatbot() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const sendQuery = async (queryText: string) => {
-    if (!queryText.trim() || isLoading) return;
+  const sendQuery = (queryText: string) => {
+    const trimmed = queryText.trim();
+    if (!trimmed || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: queryText,
+      text: trimmed,
       sender: "user",
     };
+
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error("Failed to get response");
-      }
-
-      const data = await response.json();
+    // Completely offline local AI search computation with realistic micro-typing indicator
+    setTimeout(() => {
+      const result = searchFAQ(trimmed);
 
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.text,
+        text: result.answer,
         sender: "bot",
+        category: result.faq?.category
       };
+
       setMessages((prev) => [...prev, botResponse]);
-    } catch (error) {
-      console.error("Chat API connection error:", error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I am having trouble connecting right now. Please contact reception at +91 078779 58308 or via WhatsApp for immediate assistance.",
-        sender: "bot",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
-    }
+    }, 350);
   };
 
   const handleSend = (e: React.FormEvent) => {
@@ -234,9 +215,13 @@ export default function Chatbot() {
     sendQuery(inputValue);
   };
 
+  const clearHistory = () => {
+    setMessages([DEFAULT_WELCOME_MESSAGE]);
+  };
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-      {/* 3D Robot always floating above the button or beside the chat window */}
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+      {/* 3D Floating Robot when closed */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
@@ -271,12 +256,12 @@ export default function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white w-80 sm:w-96 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-4 flex flex-col h-[500px]"
+            className="bg-[#050505] w-80 sm:w-96 rounded-2xl shadow-2xl border border-white/15 overflow-hidden mb-4 flex flex-col h-[520px]"
           >
             {/* Header */}
-            <div className="bg-[#050505] border-b border-white/20 p-4 flex items-center justify-between text-white">
+            <div className="bg-[#0E0E10] border-b border-white/10 p-3.5 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center relative overflow-hidden">
+                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center relative overflow-hidden shrink-0 border border-[#D4AF37]/30">
                   <div className="absolute inset-0">
                     <Canvas camera={{ position: [0, 1.2, 3], fov: 45 }}>
                       <ambientLight intensity={0.8} />
@@ -286,35 +271,54 @@ export default function Chatbot() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Jaipur Rajwada Concierge</h3>
-                  <p className="text-xs text-white/70 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-400"></span>{" "}
-                    Online
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-medium text-xs text-white tracking-wide">Rajwada AI Concierge</h3>
+                    <span className="text-[9px] bg-[#D4AF37]/20 text-[#D4AF37] px-1.5 py-0.5 rounded border border-[#D4AF37]/30 font-mono">OFFLINE</span>
+                  </div>
+                  <p className="text-[10px] text-white/60 flex items-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Instant Search Engine
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white/80 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                {messages.length > 1 && (
+                  <button
+                    onClick={clearHistory}
+                    title="Clear Chat History"
+                    className="p-1.5 text-white/50 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#050505]">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 bg-[#050505] scrollbar-thin scrollbar-thumb-white/10">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl p-4 text-sm shadow-sm ${
+                    className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed shadow-sm ${
                       msg.sender === "user"
                         ? "bg-[#D4AF37] text-black font-medium rounded-tr-none"
                         : "bg-white/5 border border-white/10 text-white/90 rounded-tl-none"
                     }`}
                   >
+                    {msg.sender === "bot" && msg.category && (
+                      <span className="inline-block text-[9px] uppercase tracking-wider text-[#D4AF37] font-mono mb-1 bg-[#D4AF37]/10 px-1.5 py-0.5 rounded border border-[#D4AF37]/20">
+                        {msg.category}
+                      </span>
+                    )}
                     {formatMessageText(msg.text)}
                   </div>
                 </div>
@@ -323,13 +327,16 @@ export default function Chatbot() {
               {/* Quick FAQ Suggestion Chips */}
               {messages.length <= 3 && !isLoading && (
                 <div className="pt-2 pb-1">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-[#D4AF37]/80 mb-2">Suggested Questions:</p>
+                  <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-[#D4AF37] mb-2">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Frequently Asked Questions:</span>
+                  </div>
                   <div className="flex flex-wrap gap-1.5">
                     {quickFaqs.map((faq, idx) => (
                       <button
                         key={idx}
                         onClick={() => sendQuery(faq)}
-                        className="text-xs bg-white/5 hover:bg-[#D4AF37]/20 border border-white/10 hover:border-[#D4AF37]/50 text-white/80 hover:text-white px-2.5 py-1.5 rounded-full transition-all text-left"
+                        className="text-[11px] bg-white/5 hover:bg-[#D4AF37]/20 border border-white/10 hover:border-[#D4AF37]/50 text-white/80 hover:text-white px-2.5 py-1.5 rounded-lg transition-all text-left"
                       >
                         {faq}
                       </button>
@@ -340,7 +347,8 @@ export default function Chatbot() {
 
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-2xl p-4 text-sm shadow-sm bg-white/5 border border-white/10 text-white/90 rounded-tl-none flex items-center gap-1">
+                  <div className="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs bg-white/5 border border-white/10 text-white/90 rounded-tl-none flex items-center gap-1.5">
+                    <span className="text-[#D4AF37] text-[10px] tracking-wider uppercase font-mono">Searching</span>
                     <span
                       className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
@@ -359,45 +367,40 @@ export default function Chatbot() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Action Buttons */}
-            <div className="px-3 py-2 bg-[#0A0A0C] border-t border-white/5 flex items-center justify-between text-[11px] gap-1">
-              <a 
-                href="#contact" 
-                onClick={() => setIsOpen(false)} 
-                className="px-2 py-1 bg-white/5 hover:bg-[#D4AF37] hover:text-black text-white/70 rounded transition-colors text-center flex-1 border border-white/10"
-              >
-                Direct Booking
-              </a>
+            {/* Quick Actions Bar */}
+            <div className="px-3 py-1.5 bg-[#08080A] border-t border-white/5 flex items-center justify-between text-[11px] gap-1.5">
               <a 
                 href="https://wa.me/917877958308?text=Hello%20Hotel%20Jaipur%20Rajwada!%20I%20would%20like%20to%20inquire%20about%20booking." 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="px-2 py-1 bg-emerald-950/60 hover:bg-emerald-600 text-emerald-300 hover:text-white rounded transition-colors text-center flex-1 border border-emerald-500/30"
+                className="px-2 py-1 bg-emerald-950/60 hover:bg-emerald-600 text-emerald-300 hover:text-white rounded transition-colors text-center flex-1 border border-emerald-500/30 flex items-center justify-center gap-1"
               >
-                WhatsApp Us
+                <MessageCircle className="w-3 h-3" />
+                <span>WhatsApp</span>
               </a>
               <a 
                 href="tel:+917877958308" 
-                className="px-2 py-1 bg-white/5 hover:bg-white/15 text-white/70 hover:text-white rounded transition-colors text-center flex-1 border border-white/10"
+                className="px-2 py-1 bg-white/5 hover:bg-white/15 text-white/70 hover:text-white rounded transition-colors text-center flex-1 border border-white/10 flex items-center justify-center gap-1"
               >
-                Call Reception
+                <Phone className="w-3 h-3" />
+                <span>Call Us</span>
               </a>
             </div>
 
-            {/* Input */}
+            {/* Input Form */}
             <div className="p-3 bg-[#0E0E10] border-t border-white/10">
               <form onSubmit={handleSend} className="flex items-center gap-2">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Type your question..."
-                  className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] placeholder:text-white/40"
+                  placeholder="Ask anything (e.g. Price, Location, Couple allowed)..."
+                  className="flex-1 px-3.5 py-2 bg-white/5 border border-white/10 text-white rounded-full text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] placeholder:text-white/35"
                 />
                 <button
                   type="submit"
                   disabled={!inputValue.trim()}
-                  className="w-9 h-9 rounded-full bg-[#D4AF37] text-black flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E8C76A] transition-colors shrink-0 shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                  className="w-8 h-8 rounded-full bg-[#D4AF37] text-black flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#E8C76A] transition-colors shrink-0 shadow-[0_0_12px_rgba(212,175,55,0.4)]"
                 >
                   <Send className="w-3.5 h-3.5 ml-0.5" />
                 </button>
@@ -407,10 +410,10 @@ export default function Chatbot() {
         )}
       </AnimatePresence>
 
-      {/* Toggle Button */}
+      {/* Toggle Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-[#050505] border border-white/20 text-[#D4AF37] rounded-full shadow-lg flex items-center justify-center hover:bg-[#0E0E10] hover:border-[#D4AF37] transition-transform hover:scale-105 active:scale-95"
+        className="w-14 h-14 bg-[#050505] border border-[#D4AF37]/40 text-[#D4AF37] rounded-full shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center hover:bg-[#0E0E10] hover:border-[#D4AF37] transition-transform hover:scale-105 active:scale-95"
       >
         {isOpen ? (
           <X className="w-6 h-6 text-white" />

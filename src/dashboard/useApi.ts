@@ -17,10 +17,20 @@ export function useApi(endpoint: string, initialData: any = null) {
           'Authorization': `Bearer ${fetchToken()}`
         }
       });
-      if (!res.ok) throw new Error('Failed to fetch');
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        if (contentType.includes('application/json')) {
+          const errJson = await res.json();
+          throw new Error(errJson.error || 'Failed to fetch');
+        } else {
+          const text = await res.text();
+          throw new Error(`Server returned HTTP ${res.status}: ${text.slice(0, 100)}`);
+        }
+      }
       const json = await res.json();
       setData(json);
     } catch (e: any) {
+      console.error(`Error fetching /api/${endpoint}:`, e);
       setError(e.message);
     } finally {
       setLoading(false);

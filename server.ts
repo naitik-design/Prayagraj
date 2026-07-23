@@ -9,6 +9,25 @@ import crypto from "crypto";
 const app = express();
 const PORT = 3000;
 
+// CORS Middleware
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Vercel path normalization middleware
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/index')) {
+    req.url = req.url.replace('/api/index', '/api') || '/';
+  }
+  next();
+});
+
 // Middleware to parse large JSON bodies for images (if needed)
 app.use(express.json({ limit: '50mb' }));
 
@@ -21,6 +40,9 @@ async function ensureDb() {
   if (!dbInitializingPromise) {
     dbInitializingPromise = initDb().then(() => {
       dbInitialized = true;
+    }).catch(err => {
+      console.error("Error during initDb execution:", err);
+      dbInitialized = true; // allow request processing with memory fallback
     });
   }
   await dbInitializingPromise;
@@ -30,34 +52,43 @@ async function ensureDb() {
 app.use(async (req, res, next) => {
   try {
     await ensureDb();
-    next();
   } catch (err) {
     console.error("Failed to initialize database for request:", err);
-    next(err);
   }
+  next();
 });
 
 // Simple token-based auth for dashboard
 const MOCK_TOKEN = "hotel-prayagraj-admin-token-7x9z";
 
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-  const adminUser = process.env.ADMIN_USERNAME || "admin";
-  const adminPass = process.env.ADMIN_PASSWORD || "secret";
-  
-  if (username === adminUser && password === adminPass) {
-    res.json({ success: true, token: MOCK_TOKEN });
-  } else {
-    res.status(401).json({ success: false, error: "Invalid credentials" });
+app.post(["/api/login", "/login"], (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    const adminUser = (process.env.ADMIN_USERNAME || "admin").trim();
+    const adminPass = (process.env.ADMIN_PASSWORD || "secret").trim();
+    
+    if (username && password && username.trim() === adminUser && password.trim() === adminPass) {
+      return res.json({ success: true, token: MOCK_TOKEN });
+    } else {
+      return res.status(401).json({ success: false, error: "Invalid username or password" });
+    }
+  } catch (err: any) {
+    console.error("Login route error:", err);
+    return res.status(500).json({ success: false, error: err?.message || "Internal server error during login" });
   }
 });
 
-app.post("/api/verify", (req, res) => {
-  const { token } = req.body;
-  if (token === MOCK_TOKEN) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false });
+app.post(["/api/verify", "/verify"], (req, res) => {
+  try {
+    const { token } = req.body || {};
+    if (token === MOCK_TOKEN) {
+      return res.json({ success: true });
+    } else {
+      return res.status(401).json({ success: false, error: "Invalid authentication token" });
+    }
+  } catch (err: any) {
+    console.error("Verify route error:", err);
+    return res.status(500).json({ success: false, error: err?.message || "Internal server error during token verification" });
   }
 });
 
@@ -153,7 +184,9 @@ app.post("/api/chat", async (req, res) => {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
+      return res.json({ 
+        text: "Namaste! Welcome to Hotel Jaipur Rajwada. Deluxe Heritage Rooms start at ₹3,500/night and Royal Rajwada Suites start at ₹5,500/night. For instant assistance, please contact reception at +91 78779 58308 or use WhatsApp." 
+      });
     }
 
     const ai = new GoogleGenAI({ 

@@ -24,7 +24,17 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = {};
+
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const rawText = await res.text();
+        console.error('Non-JSON response from /api/login:', res.status, rawText);
+        throw new Error(`Server returned HTTP ${res.status}: ${rawText.slice(0, 120) || 'Unexpected server error'}`);
+      }
 
       if (res.ok && data.success) {
         login(data.token, remember);
@@ -32,8 +42,9 @@ export default function Login() {
       } else {
         setError(data.error || 'Invalid credentials');
       }
-    } catch (err) {
-      setError('Connection error. Please try again.');
+    } catch (err: any) {
+      console.error('Login Error Details:', err);
+      setError(err?.message || 'Connection error. Please try again.');
     } finally {
       setIsLoading(false);
     }
