@@ -20,7 +20,8 @@ import {
   ArrowLeft,
   CreditCard,
   Check,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from "lucide-react";
 
 import gsap from "gsap";
@@ -306,8 +307,16 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Fallback room options matching exact requirements if rooms array is loading or empty
+  const defaultRoomsList = [
+    { id: '1', name: 'Deluxe Heritage Room', price: 3500 },
+    { id: '2', name: 'Royal Rajwada Suite', price: 5500 }
+  ];
+
+  const availableRooms = (rooms && rooms.length > 0) ? rooms : defaultRoomsList;
+
   const calculateTotals = () => {
-    const room = rooms?.find(r => r.id === formData.roomId);
+    const room = availableRooms.find(r => r.id === formData.roomId || r.name === formData.roomId);
     if (!room) return { subtotal: 0, taxes: 0, total: 0, days: 0 };
     
     const start = new Date(formData.checkIn);
@@ -322,7 +331,11 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
 
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.roomId || !formData.checkIn || !formData.checkOut || !formData.guestName || !formData.guestPhone) {
+    if (!formData.roomId) {
+      setErrorMsg("Please select a Room Type from the dropdown.");
+      return;
+    }
+    if (!formData.checkIn || !formData.checkOut || !formData.guestName || !formData.guestPhone) {
       setErrorMsg("Please fill out all required fields.");
       return;
     }
@@ -440,13 +453,13 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
   };
 
   const getWhatsAppLink = () => {
-    const room = rooms?.find(r => r.id === formData.roomId);
-    const roomName = room ? room.name : '';
+    const room = availableRooms.find(r => r.id === formData.roomId || r.name === formData.roomId);
+    const roomName = room ? `${room.name} – ₹${room.price}/Night` : (formData.roomId || 'Not selected');
     let text = `Hello Hotel Jaipur Rajwada! I would like to make a booking inquiry.`;
     if (formData.guestName) text += `\nName: ${formData.guestName}`;
     if (formData.guestPhone) text += `\nPhone: ${formData.guestPhone}`;
     if (formData.guestEmail) text += `\nEmail: ${formData.guestEmail}`;
-    if (roomName) text += `\nRoom Type: ${roomName}`;
+    text += `\nRoom Type: ${roomName}`;
     if (formData.guests) text += `\nGuests: ${formData.guests}`;
     if (formData.checkIn) text += `\nCheck-In: ${formData.checkIn}`;
     if (formData.checkOut) text += `\nCheck-Out: ${formData.checkOut}`;
@@ -505,7 +518,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
             
             <h4 className="text-sm font-medium tracking-widest text-primary uppercase pt-4 border-t border-white/5">Stay Details</h4>
             <div className="space-y-2 text-white/80">
-              <p><span className="text-white/40 inline-block w-24">Room:</span> {checkoutData.room.name}</p>
+              <p><span className="text-white/40 inline-block w-24">Room:</span> {checkoutData.room?.name} – ₹{checkoutData.room?.price}/Night</p>
               <p><span className="text-white/40 inline-block w-24">Check-in:</span> {formData.checkIn}</p>
               <p><span className="text-white/40 inline-block w-24">Check-out:</span> {formData.checkOut}</p>
               <p><span className="text-white/40 inline-block w-24">Duration:</span> {checkoutData.days} Night(s)</p>
@@ -516,16 +529,16 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
             <h4 className="text-sm font-medium tracking-widest text-white uppercase mb-6">Payment Summary</h4>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between text-white/60">
-                <span>Room Charges ({checkoutData.days}x ₹{checkoutData.room.price})</span>
-                <span>₹{checkoutData.subtotal.toLocaleString()}</span>
+                <span>Room Charges ({checkoutData.days}x ₹{checkoutData.room?.price})</span>
+                <span>₹{checkoutData.subtotal?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-white/60 pb-4 border-b border-white/10">
                 <span>Taxes (18% GST)</span>
-                <span>₹{checkoutData.taxes.toLocaleString()}</span>
+                <span>₹{checkoutData.taxes?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-white text-lg font-medium pt-2">
                 <span>Grand Total</span>
-                <span className="text-primary">₹{checkoutData.total.toLocaleString()}</span>
+                <span className="text-primary">₹{checkoutData.total?.toLocaleString()}</span>
               </div>
             </div>
 
@@ -545,7 +558,7 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
   }
 
   return (
-    <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleCheckout}>
+    <form className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-30" onSubmit={handleCheckout}>
       {errorMsg && (
         <div className="md:col-span-2 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
@@ -564,14 +577,34 @@ function BookingForm({ rooms, whatsappNumber }: { rooms: any[], whatsappNumber?:
         <label className="block text-sm font-medium text-white/80 mb-2">Email Address</label>
         <input value={formData.guestEmail} onChange={e => setFormData({...formData, guestEmail: e.target.value})} type="email" className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-white/30" placeholder="Enter your email address" />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-white/80 mb-2">Room Type</label>
-        <select required value={formData.roomId} onChange={e => setFormData({...formData, roomId: e.target.value})} className="w-full px-4 py-3 bg-white/5 rounded-lg border border-white/10 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all [&>option]:bg-[#0E0E10]">
-          <option value="">Select a room...</option>
-          {rooms?.map(r => (
-            <option key={r.id} value={r.id}>{r.name} - ₹{r.price}</option>
-          ))}
-        </select>
+      <div className="relative z-30">
+        <label htmlFor="room-type-select" className="block text-sm font-medium text-white/80 mb-2">
+          Room Type <span className="text-primary">*</span>
+        </label>
+        <div className="relative">
+          <select 
+            id="room-type-select"
+            name="roomId"
+            required 
+            value={formData.roomId} 
+            onChange={e => {
+              setFormData({...formData, roomId: e.target.value});
+              if (errorMsg) setErrorMsg('');
+            }} 
+            className="w-full px-4 py-3 bg-[#0E0E10] text-white rounded-lg border border-white/15 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none cursor-pointer relative z-20 pointer-events-auto pr-10 text-sm [&>option]:bg-[#0E0E10] [&>option]:text-white [&>option]:py-2"
+            style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+          >
+            <option value="" disabled className="bg-[#0E0E10] text-white/50">Select a Room</option>
+            {availableRooms.map(r => (
+              <option key={r.id} value={r.id} className="bg-[#0E0E10] text-white py-2">
+                {r.name} – ₹{r.price}/Night
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/60 z-30">
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-white/80 mb-2">Guests</label>
